@@ -70,7 +70,7 @@ export const HeroSection = () => {
               Built for hostel students and busy citizens who prioritize their wellbeing.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div className="flex justify-center mb-16">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   variant="hero" 
@@ -79,11 +79,6 @@ export const HeroSection = () => {
                   className="shadow-2xl shadow-primary/30"
                 >
                   Get Started Free
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="outline" size="lg" className="border-2">
-                  Watch Demo
                 </Button>
               </motion.div>
             </div>
