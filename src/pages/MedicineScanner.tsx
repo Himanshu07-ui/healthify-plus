@@ -2,69 +2,22 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Upload, Pill, AlertTriangle, CheckCircle, Loader2, X } from 'lucide-react';
+import { Camera, Upload, Pill, AlertTriangle, CheckCircle, Loader2, X, Search, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface MedicineInfo {
-  name: string;
-  genericName: string;
-  usage: string;
-  dosage: string;
-  sideEffects: string[];
-  warnings: string[];
-}
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { medicineDatabase, searchMedicine, MedicineInfo } from '@/data/medicineDatabase';
 
 const MedicineScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedText, setScannedText] = useState<string | null>(null);
   const [medicineInfo, setMedicineInfo] = useState<MedicineInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock medicine database
-  const medicineDatabase: Record<string, MedicineInfo> = {
-    'paracetamol': {
-      name: 'Paracetamol',
-      genericName: 'Acetaminophen',
-      usage: 'Pain relief and fever reduction',
-      dosage: '500-1000mg every 4-6 hours, max 4g/day',
-      sideEffects: ['Nausea', 'Allergic reactions (rare)', 'Liver damage (overdose)'],
-      warnings: ['Do not exceed recommended dose', 'Avoid alcohol', 'Consult doctor if symptoms persist']
-    },
-    'ibuprofen': {
-      name: 'Ibuprofen',
-      genericName: 'Ibuprofen',
-      usage: 'Anti-inflammatory, pain relief, fever reduction',
-      dosage: '200-400mg every 4-6 hours, max 1.2g/day',
-      sideEffects: ['Stomach upset', 'Dizziness', 'Headache'],
-      warnings: ['Take with food', 'Avoid if you have stomach ulcers', 'Not for long-term use']
-    },
-    'amoxicillin': {
-      name: 'Amoxicillin',
-      genericName: 'Amoxicillin',
-      usage: 'Bacterial infections treatment',
-      dosage: '250-500mg every 8 hours as prescribed',
-      sideEffects: ['Diarrhea', 'Nausea', 'Skin rash'],
-      warnings: ['Complete full course', 'Inform doctor of allergies', 'May reduce contraceptive effectiveness']
-    },
-    'cetirizine': {
-      name: 'Cetirizine',
-      genericName: 'Cetirizine Hydrochloride',
-      usage: 'Allergy relief, antihistamine',
-      dosage: '10mg once daily',
-      sideEffects: ['Drowsiness', 'Dry mouth', 'Fatigue'],
-      warnings: ['May cause drowsiness', 'Avoid alcohol', 'Use caution while driving']
-    },
-    'omeprazole': {
-      name: 'Omeprazole',
-      genericName: 'Omeprazole',
-      usage: 'Acid reflux, GERD, stomach ulcers',
-      dosage: '20-40mg once daily before breakfast',
-      sideEffects: ['Headache', 'Nausea', 'Diarrhea'],
-      warnings: ['Long-term use may affect bone health', 'Take before meals', 'Consult doctor for prolonged use']
-    }
-  };
+  const popularMedicines = ['Paracetamol', 'Ibuprofen', 'Amoxicillin', 'Cetirizine', 'Omeprazole', 'Metformin', 'Dolo 650', 'Combiflam'];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,6 +26,7 @@ const MedicineScanner = () => {
     setIsScanning(true);
     setError(null);
     setMedicineInfo(null);
+    setSearchQuery('');
 
     // Simulate OCR processing
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -86,27 +40,35 @@ const MedicineScanner = () => {
     setIsScanning(false);
   };
 
-  const handleDemoScan = async (medicineName: string) => {
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) return;
+    
     setIsScanning(true);
     setError(null);
     setMedicineInfo(null);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    const medicine = medicineDatabase[medicineName.toLowerCase()];
+    const medicine = searchMedicine(query);
     if (medicine) {
-      setScannedText(`Detected: ${medicine.name}`);
+      setScannedText(`Found: ${medicine.name}`);
       setMedicineInfo(medicine);
     } else {
-      setError('Medicine not found in database');
+      setError(`Medicine "${query}" not found in database. Try searching with the generic name or brand name.`);
     }
     setIsScanning(false);
+  };
+
+  const handleQuickScan = async (medicineName: string) => {
+    setSearchQuery(medicineName);
+    await handleSearch(medicineName);
   };
 
   const clearResults = () => {
     setScannedText(null);
     setMedicineInfo(null);
     setError(null);
+    setSearchQuery('');
   };
 
   return (
@@ -128,11 +90,58 @@ const MedicineScanner = () => {
                 Scan Your <span className="text-gradient">Medicine</span>
               </h1>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Upload an image of your medicine packaging to get detailed information about usage, dosage, and warnings.
+                Upload an image or search for any medicine to get detailed information about usage, dosage, side effects, and warnings.
               </p>
+              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
+                <Info className="w-4 h-4" />
+                <span>Database includes {Object.keys(medicineDatabase).length}+ medicines</span>
+              </div>
             </div>
 
             <div className="max-w-4xl mx-auto">
+              {/* Search Section */}
+              <Card className="mb-8">
+                <CardContent className="p-6">
+                  <div className="flex gap-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        placeholder="Search medicine by name (e.g., Paracetamol, Dolo 650, Amoxicillin...)"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                        className="pl-10 h-12 text-base"
+                      />
+                    </div>
+                    <Button 
+                      variant="hero" 
+                      onClick={() => handleSearch(searchQuery)}
+                      disabled={isScanning || !searchQuery.trim()}
+                      className="h-12 px-8"
+                    >
+                      {isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Search'}
+                    </Button>
+                  </div>
+                  
+                  {/* Popular medicines */}
+                  <div className="mt-4">
+                    <p className="text-sm text-muted-foreground mb-2">Popular searches:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {popularMedicines.map((medicine) => (
+                        <Badge
+                          key={medicine}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                          onClick={() => handleQuickScan(medicine)}
+                        >
+                          {medicine}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Upload Section */}
                 <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors">
@@ -143,7 +152,7 @@ const MedicineScanner = () => {
                       </div>
                       <h3 className="font-semibold mb-2">Upload Medicine Image</h3>
                       <p className="text-sm text-muted-foreground mb-6">
-                        Take a photo or upload an image of your medicine
+                        Take a photo or upload an image of your medicine package
                       </p>
                       <input
                         ref={fileInputRef}
@@ -153,7 +162,7 @@ const MedicineScanner = () => {
                         onChange={handleFileUpload}
                       />
                       <Button
-                        variant="hero"
+                        variant="outline"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isScanning}
                         className="w-full"
@@ -174,25 +183,35 @@ const MedicineScanner = () => {
                   </CardContent>
                 </Card>
 
-                {/* Demo Quick Scan */}
+                {/* Categories */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Quick Demo</CardTitle>
+                    <CardTitle className="text-lg">Browse by Category</CardTitle>
                     <CardDescription>
-                      Try scanning these common medicines
+                      Explore medicines by type
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {Object.keys(medicineDatabase).map((medicine) => (
+                    {['Pain Relief', 'Antibiotic', 'Antihistamine', 'Antacid', 'Vitamin', 'Diabetes'].map((category) => (
                       <Button
-                        key={medicine}
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleDemoScan(medicine)}
+                        key={category}
+                        variant="ghost"
+                        className="w-full justify-start text-left"
+                        onClick={() => {
+                          const categoryMap: Record<string, string> = {
+                            'Pain Relief': 'paracetamol',
+                            'Antibiotic': 'amoxicillin',
+                            'Antihistamine': 'cetirizine',
+                            'Antacid': 'omeprazole',
+                            'Vitamin': 'vitamin c',
+                            'Diabetes': 'metformin'
+                          };
+                          handleQuickScan(categoryMap[category]);
+                        }}
                         disabled={isScanning}
                       >
                         <Pill className="w-4 h-4 mr-2 text-primary" />
-                        {medicineDatabase[medicine].name}
+                        {category}
                       </Button>
                     ))}
                   </CardContent>
@@ -215,7 +234,7 @@ const MedicineScanner = () => {
                           ) : (
                             <CheckCircle className="w-5 h-5 text-success" />
                           )}
-                          Scan Results
+                          {error ? 'Not Found' : 'Medicine Details'}
                         </CardTitle>
                         {scannedText && (
                           <CardDescription>{scannedText}</CardDescription>
@@ -227,21 +246,33 @@ const MedicineScanner = () => {
                     </CardHeader>
                     {medicineInfo && (
                       <CardContent className="space-y-6">
+                        {/* Header with name and category */}
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h2 className="text-2xl font-bold text-foreground">{medicineInfo.name}</h2>
+                          <Badge variant="outline">{medicineInfo.category}</Badge>
+                        </div>
+
                         <div className="grid md:grid-cols-2 gap-6">
                           <div>
                             <h4 className="font-semibold text-sm text-muted-foreground mb-2">Generic Name</h4>
                             <p className="font-medium">{medicineInfo.genericName}</p>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm text-muted-foreground mb-2">Usage</h4>
-                            <p>{medicineInfo.usage}</p>
+                            <h4 className="font-semibold text-sm text-muted-foreground mb-2">Category</h4>
+                            <p>{medicineInfo.category}</p>
                           </div>
-                          <div className="md:col-span-2">
-                            <h4 className="font-semibold text-sm text-muted-foreground mb-2">Recommended Dosage</h4>
-                            <p className="bg-primary/10 text-primary px-4 py-2 rounded-lg inline-block">
-                              {medicineInfo.dosage}
-                            </p>
-                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold text-sm text-muted-foreground mb-2">Usage</h4>
+                          <p className="text-foreground">{medicineInfo.usage}</p>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold text-sm text-muted-foreground mb-2">Recommended Dosage</h4>
+                          <p className="bg-primary/10 text-primary px-4 py-3 rounded-lg">
+                            {medicineInfo.dosage}
+                          </p>
                         </div>
 
                         <div>
@@ -250,7 +281,7 @@ const MedicineScanner = () => {
                             {medicineInfo.sideEffects.map((effect, index) => (
                               <span
                                 key={index}
-                                className="px-3 py-1 bg-warning/10 text-warning rounded-full text-sm"
+                                className="px-3 py-1.5 bg-warning/10 text-warning rounded-full text-sm"
                               >
                                 {effect}
                               </span>
@@ -273,14 +304,40 @@ const MedicineScanner = () => {
                           </ul>
                         </div>
 
-                        <p className="text-xs text-muted-foreground italic">
-                          Disclaimer: This information is for educational purposes only. Always consult a healthcare professional before taking any medication.
+                        {medicineInfo.interactions && medicineInfo.interactions.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-sm text-muted-foreground mb-3">Drug Interactions</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {medicineInfo.interactions.map((interaction, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1.5 bg-accent/50 text-foreground rounded-full text-sm"
+                                >
+                                  {interaction}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {medicineInfo.storage && (
+                          <div>
+                            <h4 className="font-semibold text-sm text-muted-foreground mb-2">Storage</h4>
+                            <p className="text-muted-foreground">{medicineInfo.storage}</p>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-muted-foreground italic border-t pt-4">
+                          ⚠️ Disclaimer: This information is for educational purposes only. Always consult a healthcare professional before taking any medication. Do not self-medicate based on this information.
                         </p>
                       </CardContent>
                     )}
                     {error && (
                       <CardContent>
                         <p className="text-destructive">{error}</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Try searching with the brand name, generic name, or common spelling variations.
+                        </p>
                       </CardContent>
                     )}
                   </Card>
