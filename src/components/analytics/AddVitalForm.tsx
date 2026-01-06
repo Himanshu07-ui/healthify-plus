@@ -22,24 +22,34 @@ export const AddVitalForm = ({ onAddVital }: AddVitalFormProps) => {
     e.preventDefault();
     
     if (vitalType === 'bloodPressure') {
-      if (!systolic || !diastolic) return;
-      onAddVital({
-        type: 'bloodPressure',
+      if (!systolic || !diastolic) {
+        console.log('Missing BP values:', { systolic, diastolic });
+        return;
+      }
+      const reading = {
+        type: 'bloodPressure' as const,
         value: parseInt(systolic),
         secondaryValue: parseInt(diastolic),
         unit: 'mmHg',
         date: new Date(date),
-      });
+      };
+      console.log('Adding BP reading:', reading);
+      onAddVital(reading);
       setSystolic('');
       setDiastolic('');
     } else {
-      if (!bloodSugar) return;
-      onAddVital({
-        type: 'bloodSugar',
+      if (!bloodSugar) {
+        console.log('Missing blood sugar value');
+        return;
+      }
+      const reading = {
+        type: 'bloodSugar' as const,
         value: parseInt(bloodSugar),
         unit: 'mg/dL',
         date: new Date(date),
-      });
+      };
+      console.log('Adding BS reading:', reading);
+      onAddVital(reading);
       setBloodSugar('');
     }
   };
