@@ -126,9 +126,9 @@ export const AddVitalForm = ({ onAddVital }: AddVitalFormProps) => {
           </div>
         )}
 
-        <Button type="submit" className="w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Reading
+        <Button type="submit" size="lg" className="w-full mt-6 text-lg font-semibold">
+          <Plus className="w-5 h-5 mr-2" />
+          Submit Reading
         </Button>
       </form>
     </Card>
