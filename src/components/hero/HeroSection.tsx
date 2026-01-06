@@ -83,7 +83,7 @@ export const HeroSection = () => {
               </motion.div>
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button 
-                  variant="alert" 
+                  variant="destructive" 
                   size="xl" 
                   asChild
                   className="shadow-2xl"

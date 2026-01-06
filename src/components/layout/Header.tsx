@@ -74,7 +74,7 @@ export const Header = () => {
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="alert" size="sm" asChild className="animate-pulse">
+            <Button variant="destructive" size="sm" asChild>
               <a href="tel:112">
                 <Phone className="w-4 h-4" />
                 Emergency 112
@@ -144,7 +144,7 @@ export const Header = () => {
                 </Link>
               ))}
               <a href="tel:112" className="mt-2">
-                <Button variant="alert" className="w-full justify-center">
+                <Button variant="destructive" className="w-full justify-center">
                   <Phone className="w-4 h-4 mr-2" />
                   Emergency 112
                 </Button>
