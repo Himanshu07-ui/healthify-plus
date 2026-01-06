@@ -1,4 +1,4 @@
-import { Heart, Menu, X, LogOut, Phone } from 'lucide-react';
+import { Heart, Menu, X, LogOut, Phone, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const navItems = [
   { label: 'Home', href: '/' },
@@ -81,28 +82,35 @@ export const Header = () => {
               </a>
             </Button>
             {user ? (
-              <>
-                <span className="text-sm text-muted-foreground">
-                  {user.email?.split('@')[0]}
-                </span>
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-1" />
-                  Sign Out
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-foreground">
+                      {user.email?.split('@')[0]}
+                    </span>
+                    <span className="text-xs text-success flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                      Online
+                    </span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
+                  <LogOut className="w-4 h-4" />
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button variant="hero" size="sm">
-                    Get Started
-                  </Button>
-                </Link>
-              </>
+              <Link to="/auth">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  Sign In
+                </Button>
+              </Link>
             )}
           </div>
 
@@ -151,23 +159,35 @@ export const Header = () => {
               </a>
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
                 {user ? (
-                  <Button variant="ghost" className="w-full justify-center" onClick={handleSignOut}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
+                  <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-primary/20">
+                        <AvatarImage src={user.user_metadata?.avatar_url} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          {user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-foreground">
+                          {user.email?.split('@')[0]}
+                        </span>
+                        <span className="text-xs text-success flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                          Online
+                        </span>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={handleSignOut}>
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
                 ) : (
-                  <>
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-center">
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="hero" className="w-full justify-center">
-                        Get Started
-                      </Button>
-                    </Link>
-                  </>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-center gap-2">
+                      <User className="w-4 h-4" />
+                      Sign In
+                    </Button>
+                  </Link>
                 )}
               </div>
             </nav>
