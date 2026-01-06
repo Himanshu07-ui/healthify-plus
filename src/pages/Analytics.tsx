@@ -1,10 +1,12 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { VitalsChart } from '@/components/dashboard/VitalsChart';
-import { useHealthData } from '@/hooks/useHealthData';
+import { AddVitalForm } from '@/components/analytics/AddVitalForm';
+import { EmptyAnalyticsState } from '@/components/analytics/EmptyAnalyticsState';
+import { useUserVitals } from '@/hooks/useUserVitals';
 
 const Analytics = () => {
-  const { vitals } = useHealthData();
+  const { vitals, addVitalReading, hasData } = useUserVitals();
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,7 +22,16 @@ const Analytics = () => {
                 Track your vital trends over time with interactive charts and insights.
               </p>
             </div>
-            <VitalsChart vitals={vitals} />
+            
+            <div className="max-w-4xl mx-auto space-y-6">
+              <AddVitalForm onAddVital={addVitalReading} />
+              
+              {hasData ? (
+                <VitalsChart vitals={vitals} />
+              ) : (
+                <EmptyAnalyticsState />
+              )}
+            </div>
           </div>
         </section>
       </main>
