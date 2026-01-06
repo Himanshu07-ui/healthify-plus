@@ -1,4 +1,4 @@
-import { Heart, Menu, X, LogOut } from 'lucide-react';
+import { Heart, Menu, X, LogOut, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,6 +74,12 @@ export const Header = () => {
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
+            <Button variant="alert" size="sm" asChild className="animate-pulse">
+              <a href="tel:112">
+                <Phone className="w-4 h-4" />
+                Emergency 112
+              </a>
+            </Button>
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground">
@@ -137,6 +143,12 @@ export const Header = () => {
                   {item.label}
                 </Link>
               ))}
+              <a href="tel:112" className="mt-2">
+                <Button variant="alert" className="w-full justify-center">
+                  <Phone className="w-4 h-4 mr-2" />
+                  Emergency 112
+                </Button>
+              </a>
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
                 {user ? (
                   <Button variant="ghost" className="w-full justify-center" onClick={handleSignOut}>
