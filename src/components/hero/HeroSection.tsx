@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Activity, Shield, Clock, Heart, Sparkles } from 'lucide-react';
+import { Activity, Shield, Clock, Heart, Sparkles, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,7 +70,7 @@ export const HeroSection = () => {
               Built for hostel students and busy citizens who prioritize their wellbeing.
             </p>
 
-            <div className="flex justify-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   variant="hero" 
@@ -79,6 +79,19 @@ export const HeroSection = () => {
                   className="shadow-2xl shadow-primary/30"
                 >
                   Get Started Free
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  variant="alert" 
+                  size="xl" 
+                  asChild
+                  className="shadow-2xl"
+                >
+                  <a href="tel:112">
+                    <Phone className="w-5 h-5" />
+                    Emergency 112
+                  </a>
                 </Button>
               </motion.div>
             </div>
