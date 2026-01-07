@@ -56,6 +56,36 @@ export type Database = {
         }
         Relationships: []
       }
+      medicine_history: {
+        Row: {
+          category: string | null
+          created_at: string
+          generic_name: string | null
+          id: string
+          medicine_name: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          generic_name?: string | null
+          id?: string
+          medicine_name: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          generic_name?: string | null
+          id?: string
+          medicine_name?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
