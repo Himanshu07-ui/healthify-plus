@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, User, XCircle, CheckCircle, DollarSign } from 'lucide-react';
+import { Calendar, Clock, User, XCircle, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useHealthData } from '@/hooks/useHealthData';
-import { cn } from '@/lib/utils';
+import { useSupabaseAppointments } from '@/hooks/useSupabaseAppointments';
 import { toast } from 'sonner';
 
 const doctors = [
@@ -19,7 +18,7 @@ const doctors = [
 ];
 
 export const AppointmentSystem = () => {
-  const { appointments, cancelAppointment, bookAppointment } = useHealthData();
+  const { appointments, loading, cancelAppointment, bookAppointment } = useSupabaseAppointments();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
@@ -29,7 +28,7 @@ export const AppointmentSystem = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (!selectedDoctor || !selectedDate || !selectedTime) {
       toast.error('Please fill in all fields');
       return;
@@ -38,7 +37,7 @@ export const AppointmentSystem = () => {
     const doctor = doctors.find(d => d.id === selectedDoctor);
     if (!doctor) return;
 
-    bookAppointment({
+    const result = await bookAppointment({
       doctorName: doctor.name,
       specialty: doctor.specialty,
       date: new Date(selectedDate),
@@ -46,17 +45,21 @@ export const AppointmentSystem = () => {
       fee: doctor.fee,
     });
 
-    toast.success('Appointment booked successfully!');
-    setBookingOpen(false);
-    setSelectedDoctor('');
-    setSelectedDate('');
-    setSelectedTime('');
+    if (result) {
+      toast.success('Appointment booked successfully!');
+      setBookingOpen(false);
+      setSelectedDoctor('');
+      setSelectedDate('');
+      setSelectedTime('');
+    } else {
+      toast.error('Failed to book appointment. Please try again.');
+    }
   };
 
-  const handleCancelConfirm = () => {
+  const handleCancelConfirm = async () => {
     if (!selectedAppointmentId) return;
     
-    const result = cancelAppointment(selectedAppointmentId);
+    const result = await cancelAppointment(selectedAppointmentId);
     toast.success(`Appointment cancelled. ₹${result.refundAmount} will be refunded to your account within 5-7 business days.`);
     setCancelDialogOpen(false);
     setSelectedAppointmentId(null);
