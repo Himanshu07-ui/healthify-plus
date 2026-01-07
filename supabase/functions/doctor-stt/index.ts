@@ -12,10 +12,10 @@ serve(async (req) => {
 
   try {
     const { audio, language } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
     if (!audio) {
@@ -25,38 +25,41 @@ serve(async (req) => {
     // Decode base64 audio
     const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
     
-    // Create form data for Whisper API
+    // Create form data for ElevenLabs Speech-to-Text API
     const formData = new FormData();
     const blob = new Blob([binaryAudio], { type: 'audio/webm' });
     formData.append('file', blob, 'audio.webm');
-    formData.append('model', 'whisper-1');
+    formData.append('model_id', 'scribe_v1');
     
-    // Set language hint if provided
+    // Set language if provided
     if (language === 'hi') {
-      formData.append('language', 'hi');
+      formData.append('language_code', 'hin');
     } else {
-      formData.append('language', 'en');
+      formData.append('language_code', 'eng');
     }
 
-    // Call OpenAI Whisper via gateway
-    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    console.log("Calling ElevenLabs STT API...");
+
+    // Call ElevenLabs Speech-to-Text API
+    const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "xi-api-key": ELEVENLABS_API_KEY,
       },
       body: formData,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Whisper API error:", response.status, errorText);
-      throw new Error(`Whisper API error: ${response.status}`);
+      console.error("ElevenLabs STT error:", response.status, errorText);
+      throw new Error(`ElevenLabs STT error: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log("STT result:", result);
 
     return new Response(
-      JSON.stringify({ text: result.text }),
+      JSON.stringify({ text: result.text || "" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
