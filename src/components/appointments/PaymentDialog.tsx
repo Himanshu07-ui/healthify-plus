@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { QrCode, Copy, CheckCircle, Loader2, Smartphone } from 'lucide-react';
+import { Copy, CheckCircle, Loader2, Smartphone } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import upiQrImage from '@/assets/upi-qr.jpeg';
 
 interface PaymentDialogProps {
   open: boolean;
@@ -13,7 +14,7 @@ interface PaymentDialogProps {
   onPaymentSuccess: () => void;
 }
 
-const UPI_ID = "healthify@upi"; // Replace with actual UPI ID
+const UPI_ID = "debhimanshu9@oksbi";
 
 export const PaymentDialog = ({
   open,
@@ -25,12 +26,6 @@ export const PaymentDialog = ({
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success'>('pending');
   const [copied, setCopied] = useState(false);
   const [transactionId, setTransactionId] = useState('');
-
-  // Generate UPI payment link
-  const upiLink = `upi://pay?pa=${UPI_ID}&pn=Healthify&am=${amount}&cu=INR&tn=Appointment-${doctorName.replace(/\s/g, '-')}`;
-
-  // Generate QR code URL using Google Charts API
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
 
   const copyUpiId = async () => {
     await navigator.clipboard.writeText(UPI_ID);
@@ -93,14 +88,17 @@ export const PaymentDialog = ({
             </div>
 
             {/* QR Code */}
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center">
               <div className="bg-white p-3 rounded-xl shadow-md">
                 <img 
-                  src={qrCodeUrl} 
+                  src={upiQrImage} 
                   alt="UPI QR Code" 
-                  className="w-48 h-48"
+                  className="w-48 h-48 object-contain"
                 />
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Scan to pay with any UPI app
+              </p>
             </div>
 
             {/* UPI ID */}
