@@ -25,9 +25,20 @@ export const useSupabaseVitals = () => {
 
       if (error) throw error;
 
+      // Map database vital types to frontend vital types
+      const mapFromDbType = (dbType: string): VitalReading['type'] => {
+        const mapping: Record<string, VitalReading['type']> = {
+          blood_pressure: 'bloodPressure',
+          blood_sugar: 'bloodSugar',
+          thyroid: 'thyroid',
+          cholesterol: 'cholesterol',
+        };
+        return mapping[dbType] || 'bloodPressure';
+      };
+
       const mappedVitals: VitalReading[] = (data || []).map((v) => ({
         id: v.id,
-        type: v.vital_type as VitalReading['type'],
+        type: mapFromDbType(v.vital_type),
         value: Number(v.value),
         secondaryValue: v.diastolic ? Number(v.diastolic) : undefined,
         unit: v.unit,
@@ -47,6 +58,28 @@ export const useSupabaseVitals = () => {
     fetchVitals();
   }, [fetchVitals]);
 
+  // Map frontend vital types to database vital types
+  const mapToDbType = (type: VitalReading['type']): string => {
+    const mapping: Record<VitalReading['type'], string> = {
+      bloodPressure: 'blood_pressure',
+      bloodSugar: 'blood_sugar',
+      thyroid: 'thyroid',
+      cholesterol: 'cholesterol',
+    };
+    return mapping[type];
+  };
+
+  // Map database vital types to frontend vital types
+  const mapFromDbType = (dbType: string): VitalReading['type'] => {
+    const mapping: Record<string, VitalReading['type']> = {
+      blood_pressure: 'bloodPressure',
+      blood_sugar: 'bloodSugar',
+      thyroid: 'thyroid',
+      cholesterol: 'cholesterol',
+    };
+    return mapping[dbType] || 'bloodPressure';
+  };
+
   const addVitalReading = useCallback(async (reading: Omit<VitalReading, 'id'>) => {
     if (!user) return null;
 
@@ -62,7 +95,7 @@ export const useSupabaseVitals = () => {
         diastolic?: number;
       } = {
         user_id: user.id,
-        vital_type: reading.type,
+        vital_type: mapToDbType(reading.type),
         value: reading.value,
         unit: reading.unit,
         recorded_at: reading.date.toISOString(),
@@ -85,7 +118,7 @@ export const useSupabaseVitals = () => {
 
       const newReading: VitalReading = {
         id: data.id,
-        type: data.vital_type as VitalReading['type'],
+        type: mapFromDbType(data.vital_type),
         value: Number(data.value),
         secondaryValue: data.diastolic ? Number(data.diastolic) : undefined,
         unit: data.unit,
