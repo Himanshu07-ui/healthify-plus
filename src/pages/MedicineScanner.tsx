@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { searchMedicine, MedicineInfo, medicineDatabase } from '@/data/medicineDatabase';
+import { searchMedicine, Medicine, medicineDatabase } from '@/data/medicineDatabase';
+
+type MedicineInfo = Medicine;
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
