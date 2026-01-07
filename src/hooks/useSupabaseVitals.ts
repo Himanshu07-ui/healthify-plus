@@ -141,6 +141,7 @@ export const useSupabaseVitals = () => {
       const systolic = reading.value;
       const diastolic = reading.secondaryValue || 0;
 
+      // Critical HIGH
       if (
         systolic >= thresholds.bloodPressure.systolic.critical_high ||
         diastolic >= thresholds.bloodPressure.diastolic.critical_high
@@ -155,6 +156,22 @@ export const useSupabaseVitals = () => {
         };
       }
 
+      // Critical LOW
+      if (
+        systolic <= thresholds.bloodPressure.systolic.critical_low ||
+        diastolic <= thresholds.bloodPressure.diastolic.critical_low
+      ) {
+        return {
+          type: 'critical',
+          title: '🚨 Severe Hypotension',
+          message: `Your blood pressure (${systolic}/${diastolic} mmHg) is dangerously low. Seek immediate medical attention!`,
+          vitalType: 'Blood Pressure',
+          value: systolic,
+          threshold: { min: thresholds.bloodPressure.systolic.critical_low },
+        };
+      }
+
+      // Warning HIGH
       if (
         systolic >= thresholds.bloodPressure.systolic.high ||
         diastolic >= thresholds.bloodPressure.diastolic.high
@@ -166,6 +183,21 @@ export const useSupabaseVitals = () => {
           vitalType: 'Blood Pressure',
           value: systolic,
           threshold: { max: thresholds.bloodPressure.systolic.high },
+        };
+      }
+
+      // Warning LOW
+      if (
+        systolic <= thresholds.bloodPressure.systolic.low ||
+        diastolic <= thresholds.bloodPressure.diastolic.low
+      ) {
+        return {
+          type: 'warning',
+          title: '⚠️ Low Blood Pressure',
+          message: `Your blood pressure (${systolic}/${diastolic} mmHg) is low. Monitor for dizziness and consult your doctor.`,
+          vitalType: 'Blood Pressure',
+          value: systolic,
+          threshold: { min: thresholds.bloodPressure.systolic.low },
         };
       }
     }
@@ -203,17 +235,109 @@ export const useSupabaseVitals = () => {
           threshold: { max: thresholds.bloodSugar.high },
         };
       }
+
+      if (reading.value <= thresholds.bloodSugar.low) {
+        return {
+          type: 'warning',
+          title: '⚠️ Low Blood Sugar',
+          message: `Your blood sugar (${reading.value} mg/dL) is low. Consider having a snack and monitor closely.`,
+          vitalType: 'Blood Sugar',
+          value: reading.value,
+          threshold: { min: thresholds.bloodSugar.low },
+        };
+      }
     }
 
-    if (reading.type === 'cholesterol' && reading.value >= thresholds.cholesterol.critical_high) {
-      return {
-        type: 'critical',
-        title: '🚨 Critically High Cholesterol',
-        message: `Your cholesterol (${reading.value} mg/dL) is critically elevated. Consult your doctor immediately.`,
-        vitalType: 'Cholesterol',
-        value: reading.value,
-        threshold: { max: thresholds.cholesterol.critical_high },
-      };
+    if (reading.type === 'cholesterol') {
+      if (reading.value >= thresholds.cholesterol.critical_high) {
+        return {
+          type: 'critical',
+          title: '🚨 Critically High Cholesterol',
+          message: `Your cholesterol (${reading.value} mg/dL) is critically elevated. Consult your doctor immediately.`,
+          vitalType: 'Cholesterol',
+          value: reading.value,
+          threshold: { max: thresholds.cholesterol.critical_high },
+        };
+      }
+
+      if (reading.value >= thresholds.cholesterol.high) {
+        return {
+          type: 'warning',
+          title: '⚠️ High Cholesterol',
+          message: `Your cholesterol (${reading.value} mg/dL) is elevated. Consider dietary changes and consult your doctor.`,
+          vitalType: 'Cholesterol',
+          value: reading.value,
+          threshold: { max: thresholds.cholesterol.high },
+        };
+      }
+
+      if (reading.value <= thresholds.cholesterol.critical_low) {
+        return {
+          type: 'critical',
+          title: '🚨 Critically Low Cholesterol',
+          message: `Your cholesterol (${reading.value} mg/dL) is critically low. Seek medical attention.`,
+          vitalType: 'Cholesterol',
+          value: reading.value,
+          threshold: { min: thresholds.cholesterol.critical_low },
+        };
+      }
+
+      if (reading.value <= thresholds.cholesterol.low) {
+        return {
+          type: 'warning',
+          title: '⚠️ Low Cholesterol',
+          message: `Your cholesterol (${reading.value} mg/dL) is low. Consult your doctor for evaluation.`,
+          vitalType: 'Cholesterol',
+          value: reading.value,
+          threshold: { min: thresholds.cholesterol.low },
+        };
+      }
+    }
+
+    if (reading.type === 'thyroid') {
+      if (reading.value >= thresholds.thyroid.critical_high) {
+        return {
+          type: 'critical',
+          title: '🚨 Severe Hypothyroidism',
+          message: `Your TSH (${reading.value} mIU/L) is critically high indicating severe hypothyroidism. Seek medical attention!`,
+          vitalType: 'Thyroid',
+          value: reading.value,
+          threshold: { max: thresholds.thyroid.critical_high },
+        };
+      }
+
+      if (reading.value >= thresholds.thyroid.high) {
+        return {
+          type: 'warning',
+          title: '⚠️ Elevated TSH',
+          message: `Your TSH (${reading.value} mIU/L) is elevated indicating possible hypothyroidism. Consult your doctor.`,
+          vitalType: 'Thyroid',
+          value: reading.value,
+          threshold: { max: thresholds.thyroid.high },
+        };
+      }
+
+      if (reading.value <= thresholds.thyroid.critical_low) {
+        return {
+          type: 'critical',
+          title: '🚨 Severe Hyperthyroidism',
+          message: `Your TSH (${reading.value} mIU/L) is critically low indicating severe hyperthyroidism. Seek medical attention!`,
+          vitalType: 'Thyroid',
+          value: reading.value,
+          threshold: { min: thresholds.thyroid.critical_low },
+        };
+      }
+
+      if (reading.value <= thresholds.thyroid.low) {
+        return {
+          type: 'warning',
+          title: '⚠️ Low TSH',
+          message: `Your TSH (${reading.value} mIU/L) is low indicating possible hyperthyroidism. Consult your doctor.`,
+          vitalType: 'Thyroid',
+          value: reading.value,
+          threshold: { min: thresholds.thyroid.low },
+        };
+      }
     }
 
     return null;
