@@ -12,7 +12,6 @@ const navItems = [
   { label: 'Home', href: '/' },
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Symptoms', href: '/symptoms' },
-  { label: 'Analytics', href: '/analytics' },
   { label: 'Appointments', href: '/appointments' },
   { label: 'Medicine Scanner', href: '/medicine-scanner' },
 ];
