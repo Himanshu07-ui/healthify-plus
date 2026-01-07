@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { VitalCard } from './VitalCard';
 import { AddVitalDialog } from './AddVitalDialog';
 import { VitalsChart } from './VitalsChart';
-import { useHealthData } from '@/hooks/useHealthData';
+import { useSupabaseVitals } from '@/hooks/useSupabaseVitals';
 import { VitalReading } from '@/types/health';
 import { generateHealthReport } from '@/lib/pdfGenerator';
 
@@ -14,11 +14,12 @@ type VitalType = 'bloodPressure' | 'bloodSugar' | 'thyroid' | 'cholesterol';
 export const HealthDashboard = () => {
   const { 
     vitals, 
+    loading,
     addVitalReading, 
     checkForAlerts, 
     getLatestVital, 
     getVitalsByType 
-  } = useHealthData();
+  } = useSupabaseVitals();
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedVital, setSelectedVital] = useState<VitalType>('bloodPressure');

@@ -14,7 +14,7 @@ interface AddVitalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   vitalType: VitalType;
-  onSubmit: (reading: Omit<VitalReading, 'id'>) => VitalReading;
+  onSubmit: (reading: Omit<VitalReading, 'id'>) => Promise<VitalReading | null>;
   onCheckAlert: (reading: VitalReading) => HealthAlert | null;
 }
 
@@ -64,16 +64,21 @@ export const AddVitalDialog = ({
 
   const config = vitalConfig[vitalType];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const reading = onSubmit({
+    const reading = await onSubmit({
       type: vitalType,
       value: parseFloat(value),
       secondaryValue: config.hasSecondary ? parseFloat(secondaryValue) : undefined,
       unit: config.unit,
       date: new Date(),
     });
+
+    if (!reading) {
+      resetAndClose();
+      return;
+    }
 
     const healthAlert = onCheckAlert(reading);
     if (healthAlert) {
