@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, VolumeX, Send, RotateCcw, Bot, User, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Send, RotateCcw, Bot, User, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ type Message = { role: 'user' | 'assistant'; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-doctor`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/doctor-tts`;
+const STT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/doctor-stt`;
 
 export const AIDoctorChat = () => {
   const [language, setLanguage] = useState<Language | null>(null);
@@ -19,11 +20,12 @@ export const AIDoctorChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [micSupported, setMicSupported] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const scrollToBottom = () => {
@@ -34,112 +36,107 @@ export const AIDoctorChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Initialize speech recognition
+  // Cleanup on unmount
   useEffect(() => {
-    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (SpeechRecognitionAPI) {
-      const recognition = new SpeechRecognitionAPI();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      
-      recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result: any) => result.transcript)
-          .join('');
-        
-        setInput(transcript);
-        
-        // If final result, stop listening
-        if (event.results[event.results.length - 1].isFinal) {
-          setIsListening(false);
-        }
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-        
-        if (event.error === 'not-allowed') {
-          toast.error(language === 'hi' 
-            ? 'माइक्रोफोन की अनुमति दें' 
-            : 'Please allow microphone access');
-          setMicSupported(false);
-        } else if (event.error === 'no-speech') {
-          toast.info(language === 'hi' 
-            ? 'कोई आवाज नहीं सुनाई दी' 
-            : 'No speech detected. Try again.');
-        } else {
-          toast.error(language === 'hi' 
-            ? 'आवाज पहचानने में त्रुटि' 
-            : 'Voice recognition error');
-        }
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    } else {
-      setMicSupported(false);
-    }
-
     return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch (e) {
-          // Ignore
-        }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
       }
       if (audioRef.current) {
         audioRef.current.pause();
       }
     };
-  }, [language]);
+  }, []);
 
   const startListening = useCallback(async () => {
-    if (!recognitionRef.current) {
-      toast.error(language === 'hi' 
-        ? 'आवाज पहचान उपलब्ध नहीं है। Chrome browser का उपयोग करें।' 
-        : 'Voice recognition not available. Please use Chrome browser.');
-      return;
-    }
-
-    // Request microphone permission first
+    // Request microphone permission
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      audioChunksRef.current = [];
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+        
+        if (audioChunksRef.current.length === 0) {
+          setIsListening(false);
+          return;
+        }
+        
+        setIsProcessingVoice(true);
+        
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          // Convert to base64
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve) => {
+            reader.onloadend = () => {
+              const base64 = (reader.result as string).split(',')[1];
+              resolve(base64);
+            };
+          });
+          reader.readAsDataURL(audioBlob);
+          const base64Audio = await base64Promise;
+          
+          // Send to STT edge function
+          const response = await fetch(STT_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ audio: base64Audio, language }),
+          });
+          
+          if (!response.ok) {
+            throw new Error('STT request failed');
+          }
+          
+          const result = await response.json();
+          
+          if (result.text) {
+            setInput(result.text);
+            toast.success(language === 'hi' ? 'आवाज पहचान ली गई!' : 'Voice recognized!');
+          } else {
+            toast.info(language === 'hi' ? 'कोई आवाज नहीं सुनाई दी' : 'No speech detected');
+          }
+        } catch (error) {
+          console.error('STT error:', error);
+          toast.error(language === 'hi' ? 'आवाज पहचानने में त्रुटि' : 'Voice recognition error');
+        } finally {
+          setIsProcessingVoice(false);
+          setIsListening(false);
+        }
+      };
+      
+      mediaRecorder.start();
+      setIsListening(true);
+      toast.info(language === 'hi' ? 'बोलिए... (रोकने के लिए फिर से दबाएं)' : 'Speak now... (tap again to stop)');
+      
     } catch (err) {
+      console.error('Mic access error:', err);
       toast.error(language === 'hi' 
         ? 'माइक्रोफोन की अनुमति दें' 
         : 'Please allow microphone access in your browser');
-      setMicSupported(false);
-      return;
-    }
-
-    try {
-      recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : 'en-US';
-      recognitionRef.current.start();
-      setIsListening(true);
-      toast.info(language === 'hi' ? 'बोलिए...' : 'Speak now...');
-    } catch (err) {
-      console.error('Failed to start recognition:', err);
       setIsListening(false);
     }
   }, [language]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        // Ignore
-      }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
-    setIsListening(false);
   }, []);
 
   const speak = useCallback(async (text: string) => {
@@ -486,22 +483,30 @@ export const AIDoctorChat = () => {
             variant={isListening ? "destructive" : "outline"}
             size="icon"
             onClick={isListening ? stopListening : startListening}
-            disabled={isLoading || !micSupported}
+            disabled={isLoading || isProcessingVoice}
             className={cn("flex-shrink-0", isListening && "animate-pulse")}
-            title={micSupported ? (isListening ? 'Stop' : 'Speak') : 'Microphone not available'}
+            title={isListening ? 'Stop recording' : 'Speak'}
           >
-            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {isProcessingVoice ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isListening ? (
+              <MicOff className="w-4 h-4" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
           </Button>
           
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              isListening 
-                ? (language === 'hi' ? 'सुन रहा हूं...' : 'Listening...')
-                : (language === 'hi' ? 'अपनी समस्या लिखें या बोलें...' : 'Type or speak your symptoms...')
+              isProcessingVoice
+                ? (language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...')
+                : isListening 
+                  ? (language === 'hi' ? 'सुन रहा हूं...' : 'Listening...')
+                  : (language === 'hi' ? 'अपनी समस्या लिखें या बोलें...' : 'Type or speak your symptoms...')
             }
-            disabled={isLoading}
+            disabled={isLoading || isProcessingVoice}
             className="flex-1"
           />
           
@@ -509,20 +514,12 @@ export const AIDoctorChat = () => {
             type="submit"
             variant="hero"
             size="icon"
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isProcessingVoice}
             className="flex-shrink-0"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        
-        {!micSupported && (
-          <p className="text-xs text-destructive mt-2 text-center">
-            {language === 'hi' 
-              ? '⚠️ माइक्रोफोन उपलब्ध नहीं है। Chrome browser का उपयोग करें।'
-              : '⚠️ Microphone not available. Please use Chrome browser.'}
-          </p>
-        )}
         
         <p className="text-xs text-muted-foreground mt-2 text-center">
           {language === 'hi' 
