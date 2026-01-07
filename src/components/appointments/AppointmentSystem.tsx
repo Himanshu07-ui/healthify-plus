@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, User, XCircle, DollarSign } from 'lucide-react';
+import { Calendar, Clock, User, XCircle, DollarSign, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,6 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseAppointments } from '@/hooks/useSupabaseAppointments';
 import { toast } from 'sonner';
+import { PaymentDialog } from './PaymentDialog';
+import { ConfirmationDialog } from './ConfirmationDialog';
+import { generateInvoice } from '@/lib/invoiceGenerator';
+import { Appointment } from '@/types/health';
 
 const doctors = [
   { id: '1', name: 'Dr. Sarah Mitchell', specialty: 'General Physician', fee: 500, available: ['09:00 AM', '10:30 AM', '02:00 PM', '04:30 PM'] },
@@ -23,19 +27,35 @@ export const AppointmentSystem = () => {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   
+  // Payment flow state
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [bookedAppointment, setBookedAppointment] = useState<Appointment | null>(null);
+  const [currentTransactionId, setCurrentTransactionId] = useState('');
+  
   // Booking form state
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
 
-  const handleBook = async () => {
+  // Initiate payment flow
+  const handleProceedToPayment = () => {
     if (!selectedDoctor || !selectedDate || !selectedTime) {
       toast.error('Please fill in all fields');
       return;
     }
+    setBookingOpen(false);
+    setPaymentOpen(true);
+  };
 
+  // Handle payment success - book the appointment
+  const handlePaymentSuccess = async () => {
     const doctor = doctors.find(d => d.id === selectedDoctor);
     if (!doctor) return;
+
+    // Generate a mock transaction ID
+    const txnId = `TXN${Date.now().toString(36).toUpperCase()}`;
+    setCurrentTransactionId(txnId);
 
     const result = await bookAppointment({
       doctorName: doctor.name,
@@ -45,15 +65,23 @@ export const AppointmentSystem = () => {
       fee: doctor.fee,
     });
 
+    setPaymentOpen(false);
+
     if (result) {
-      toast.success('Appointment booked successfully!');
-      setBookingOpen(false);
+      setBookedAppointment(result);
+      setConfirmationOpen(true);
       setSelectedDoctor('');
       setSelectedDate('');
       setSelectedTime('');
     } else {
-      toast.error('Failed to book appointment. Please try again.');
+      toast.error('Failed to book appointment. Payment received - please contact support.');
     }
+  };
+
+  // Download invoice for an existing appointment
+  const handleDownloadInvoice = (appointment: Appointment, txnId: string = 'N/A') => {
+    generateInvoice(appointment, txnId, 'Patient');
+    toast.success('Invoice downloaded!');
   };
 
   const handleCancelConfirm = async () => {
@@ -155,6 +183,14 @@ export const AppointmentSystem = () => {
                         >
                           <XCircle className="w-4 h-4" /> Cancel
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadInvoice(appointment)}
+                          className="gap-1"
+                        >
+                          <Download className="w-4 h-4" /> Invoice
+                        </Button>
                       </div>
                     </div>
                   </Card>
@@ -246,12 +282,34 @@ export const AppointmentSystem = () => {
             <Button variant="outline" onClick={() => setBookingOpen(false)} className="flex-1">
               Cancel
             </Button>
-            <Button variant="hero" onClick={handleBook} className="flex-1">
-              Confirm Booking
+            <Button variant="hero" onClick={handleProceedToPayment} className="flex-1">
+              Proceed to Pay ₹{selectedDoctorData?.fee || 0}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Payment Dialog */}
+      <PaymentDialog
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+        amount={doctors.find(d => d.id === selectedDoctor)?.fee || 0}
+        doctorName={doctors.find(d => d.id === selectedDoctor)?.name || ''}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={confirmationOpen}
+        onOpenChange={setConfirmationOpen}
+        appointment={bookedAppointment}
+        transactionId={currentTransactionId}
+        onDownloadInvoice={() => {
+          if (bookedAppointment) {
+            handleDownloadInvoice(bookedAppointment, currentTransactionId);
+          }
+        }}
+      />
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
