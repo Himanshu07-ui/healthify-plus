@@ -27,6 +27,9 @@ export const AIDoctorChat = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioQueueRef = useRef<string[]>([]);
+  const isPlayingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -139,16 +142,18 @@ export const AIDoctorChat = () => {
     }
   }, []);
 
-  const speak = useCallback(async (text: string) => {
-    if (!voiceEnabled) return;
-    
-    // Stop any current audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+  // Play audio from queue sequentially
+  const playNextInQueue = useCallback(async () => {
+    if (isPlayingRef.current || audioQueueRef.current.length === 0) {
+      if (audioQueueRef.current.length === 0) {
+        setIsSpeaking(false);
+      }
+      return;
     }
 
+    isPlayingRef.current = true;
     setIsSpeaking(true);
+    const text = audioQueueRef.current.shift()!;
 
     try {
       const response = await fetch(TTS_URL, {
@@ -160,9 +165,7 @@ export const AIDoctorChat = () => {
         body: JSON.stringify({ text, language }),
       });
 
-      if (!response.ok) {
-        throw new Error('TTS request failed');
-      }
+      if (!response.ok) throw new Error('TTS failed');
 
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -171,39 +174,55 @@ export const AIDoctorChat = () => {
       audioRef.current = audio;
       
       audio.onended = () => {
-        setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
+        isPlayingRef.current = false;
+        playNextInQueue();
       };
       
       audio.onerror = () => {
-        setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
+        isPlayingRef.current = false;
+        playNextInQueue();
       };
       
       await audio.play();
     } catch (error) {
       console.error('TTS error:', error);
-      setIsSpeaking(false);
-      // Fallback to browser TTS
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language === 'hi' ? 'hi-IN' : 'en-US';
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utterance);
+      isPlayingRef.current = false;
+      playNextInQueue();
     }
-  }, [language, voiceEnabled]);
+  }, [language]);
+
+  // Queue text for speaking
+  const queueSpeak = useCallback((text: string) => {
+    if (!voiceEnabled || !text.trim()) return;
+    audioQueueRef.current.push(text);
+    playNextInQueue();
+  }, [voiceEnabled, playNextInQueue]);
 
   const stopSpeaking = useCallback(() => {
+    // Clear the queue
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    
+    // Abort any ongoing fetch
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
   }, []);
 
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading || !language) return;
+
+    // Stop any current speech
+    stopSpeaking();
 
     const userMessage: Message = { role: 'user', content: messageText };
     setMessages(prev => [...prev, userMessage]);
@@ -211,6 +230,12 @@ export const AIDoctorChat = () => {
     setIsLoading(true);
 
     let assistantContent = '';
+    let sentenceBuffer = '';
+    
+    // Sentence-ending patterns
+    const sentenceEnders = /[।.!?]/;
+
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(CHAT_URL, {
@@ -223,6 +248,7 @@ export const AIDoctorChat = () => {
           messages: [...messages, userMessage],
           language 
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -259,6 +285,9 @@ export const AIDoctorChat = () => {
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               assistantContent += content;
+              sentenceBuffer += content;
+              
+              // Update UI immediately
               setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === 'assistant') {
@@ -266,6 +295,20 @@ export const AIDoctorChat = () => {
                 }
                 return [...prev, { role: 'assistant', content: assistantContent }];
               });
+
+              // Check if we have a complete sentence to speak
+              if (voiceEnabled && sentenceEnders.test(sentenceBuffer)) {
+                const sentences = sentenceBuffer.split(sentenceEnders);
+                // Queue all complete sentences
+                for (let i = 0; i < sentences.length - 1; i++) {
+                  const sentence = sentences[i].trim();
+                  if (sentence) {
+                    queueSpeak(sentence);
+                  }
+                }
+                // Keep the incomplete part
+                sentenceBuffer = sentences[sentences.length - 1];
+              }
             }
           } catch {
             buffer = line + '\n' + buffer;
@@ -274,13 +317,15 @@ export const AIDoctorChat = () => {
         }
       }
 
-      // Speak the response with ElevenLabs
-      if (assistantContent && voiceEnabled) {
-        speak(assistantContent);
+      // Speak any remaining text
+      if (voiceEnabled && sentenceBuffer.trim()) {
+        queueSpeak(sentenceBuffer.trim());
       }
-    } catch (error) {
-      console.error('Chat error:', error);
-      toast.error(language === 'hi' ? 'उत्तर प्राप्त करने में त्रुटि' : 'Error getting response');
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Chat error:', error);
+        toast.error(language === 'hi' ? 'उत्तर प्राप्त करने में त्रुटि' : 'Error getting response');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -301,7 +346,7 @@ export const AIDoctorChat = () => {
     };
     setMessages([greeting]);
     if (voiceEnabled) {
-      setTimeout(() => speak(greeting.content), 500);
+      setTimeout(() => queueSpeak(greeting.content), 500);
     }
   };
 
