@@ -1092,6 +1092,450 @@ export const medicineDatabase: Record<string, MedicineInfo> = {
     sideEffects: ['High sodium intake'],
     warnings: ['Contains salt - use with caution in hypertension'],
     storage: 'Store in a dry place'
+  },
+
+  // Cold & Cough Medicines
+  'cheston cold': {
+    name: 'Cheston Cold',
+    genericName: 'Cetirizine 5mg + Phenylephrine 10mg + Paracetamol 325mg',
+    category: 'Cold & Flu Combination',
+    usage: 'Relief from common cold symptoms including runny nose, sneezing, nasal congestion, headache, and body aches.',
+    dosage: '1 tablet every 4-6 hours as needed. Maximum 4 tablets per day.',
+    sideEffects: ['Drowsiness', 'Dry mouth', 'Dizziness', 'Nausea', 'Palpitations'],
+    warnings: ['May cause drowsiness - avoid driving', 'Not for children under 12', 'Avoid in hypertension', 'Do not use with other paracetamol products'],
+    interactions: ['MAO inhibitors', 'Other antihistamines', 'Alcohol', 'Sedatives'],
+    storage: 'Store below 25°C in a dry place'
+  },
+  'sinarest': {
+    name: 'Sinarest',
+    genericName: 'Paracetamol + Phenylephrine + Chlorpheniramine',
+    category: 'Cold & Flu Combination',
+    usage: 'Cold, flu, sinusitis, and nasal congestion relief.',
+    dosage: '1 tablet 3-4 times daily.',
+    sideEffects: ['Drowsiness', 'Dry mouth', 'Dizziness'],
+    warnings: ['Causes drowsiness', 'Avoid in hypertension', 'Not for prolonged use'],
+    storage: 'Store in a cool, dry place'
+  },
+  'vicks action 500': {
+    name: 'Vicks Action 500',
+    genericName: 'Paracetamol + Phenylephrine + Caffeine',
+    category: 'Cold & Flu Combination',
+    usage: 'Headache, body ache, cold, and congestion.',
+    dosage: '1-2 tablets every 4-6 hours. Maximum 8 tablets daily.',
+    sideEffects: ['Nervousness', 'Insomnia', 'Nausea'],
+    warnings: ['Contains caffeine', 'Avoid late evening doses', 'Not for children under 12'],
+    storage: 'Store below 30°C'
+  },
+  'benadryl cough syrup': {
+    name: 'Benadryl Cough Syrup',
+    genericName: 'Diphenhydramine + Ammonium Chloride',
+    category: 'Cough Suppressant',
+    usage: 'Dry cough, allergic cough, and cold symptoms.',
+    dosage: '10ml every 4-6 hours. Maximum 4 doses daily.',
+    sideEffects: ['Drowsiness', 'Dry mouth', 'Dizziness'],
+    warnings: ['Causes significant drowsiness', 'Do not drive', 'Avoid alcohol'],
+    storage: 'Store below 25°C'
+  },
+  'grilinctus': {
+    name: 'Grilinctus',
+    genericName: 'Dextromethorphan + Phenylephrine + Chlorpheniramine',
+    category: 'Cough & Cold',
+    usage: 'Cough, cold, and nasal congestion.',
+    dosage: '10ml 3-4 times daily.',
+    sideEffects: ['Drowsiness', 'Nausea', 'Dizziness'],
+    warnings: ['Causes drowsiness', 'Not for children under 6'],
+    storage: 'Store in a cool place'
+  },
+  'alex': {
+    name: 'Alex Cough Syrup',
+    genericName: 'Phenylephrine + Chlorpheniramine + Dextromethorphan',
+    category: 'Cough Suppressant',
+    usage: 'Dry cough, allergic cough, nasal congestion.',
+    dosage: '5-10ml 3-4 times daily.',
+    sideEffects: ['Drowsiness', 'Dry mouth', 'Constipation'],
+    warnings: ['May cause drowsiness', 'Avoid in glaucoma'],
+    storage: 'Store below 25°C'
+  },
+  'honitus': {
+    name: 'Honitus',
+    genericName: 'Honey + Tulsi + Mulethi (Herbal)',
+    category: 'Cough Syrup (Ayurvedic)',
+    usage: 'Cough, sore throat, and respiratory relief.',
+    dosage: '10-15ml 3 times daily.',
+    sideEffects: ['Rare allergic reactions'],
+    warnings: ['Natural product - results may vary', 'Consult doctor if symptoms persist'],
+    storage: 'Store in a cool, dry place'
+  },
+
+  // Blood Pressure Medicines
+  'amlodipine': {
+    name: 'Amlodipine',
+    genericName: 'Amlodipine Besylate',
+    category: 'Calcium Channel Blocker (Antihypertensive)',
+    usage: 'High blood pressure (hypertension) and chest pain (angina).',
+    dosage: '5-10mg once daily. Start with 5mg.',
+    sideEffects: ['Swelling in ankles/feet', 'Dizziness', 'Flushing', 'Headache', 'Fatigue'],
+    warnings: ['Do not stop suddenly', 'Monitor blood pressure regularly', 'Report severe dizziness', 'Avoid grapefruit'],
+    interactions: ['Simvastatin', 'Cyclosporine', 'Other BP medications'],
+    storage: 'Store at room temperature'
+  },
+  'amlokind': {
+    name: 'Amlokind',
+    genericName: 'Amlodipine 5mg',
+    category: 'Calcium Channel Blocker',
+    usage: 'Hypertension and angina.',
+    dosage: '1 tablet once daily.',
+    sideEffects: ['Ankle swelling', 'Headache', 'Flushing'],
+    warnings: ['Take at same time daily', 'Do not stop abruptly'],
+    storage: 'Store below 30°C'
+  },
+  'telma': {
+    name: 'Telma',
+    genericName: 'Telmisartan 40mg',
+    category: 'ARB (Angiotensin Receptor Blocker)',
+    usage: 'High blood pressure and cardiovascular protection.',
+    dosage: '40-80mg once daily.',
+    sideEffects: ['Dizziness', 'Back pain', 'Diarrhea', 'Upper respiratory infection'],
+    warnings: ['Not for pregnant women', 'Monitor kidney function', 'May cause hyperkalemia'],
+    interactions: ['NSAIDs', 'Potassium supplements', 'Lithium'],
+    storage: 'Store below 30°C'
+  },
+  'telma h': {
+    name: 'Telma H',
+    genericName: 'Telmisartan 40mg + Hydrochlorothiazide 12.5mg',
+    category: 'ARB + Diuretic',
+    usage: 'High blood pressure when single drug is not sufficient.',
+    dosage: '1 tablet once daily.',
+    sideEffects: ['Dizziness', 'Dehydration', 'Electrolyte imbalance'],
+    warnings: ['Stay hydrated', 'Monitor electrolytes', 'Not in pregnancy'],
+    storage: 'Store in a dry place'
+  },
+  'atenolol': {
+    name: 'Atenolol',
+    genericName: 'Atenolol',
+    category: 'Beta Blocker',
+    usage: 'High blood pressure, angina, and heart rhythm disorders.',
+    dosage: '25-100mg once daily.',
+    sideEffects: ['Fatigue', 'Cold hands/feet', 'Dizziness', 'Slow heartbeat'],
+    warnings: ['Do not stop suddenly', 'May mask low blood sugar symptoms', 'Avoid in asthma'],
+    interactions: ['Calcium channel blockers', 'Digoxin', 'Clonidine'],
+    storage: 'Store at room temperature'
+  },
+  'metoprolol': {
+    name: 'Metoprolol',
+    genericName: 'Metoprolol Tartrate/Succinate',
+    category: 'Beta Blocker',
+    usage: 'Hypertension, angina, heart failure, and after heart attack.',
+    dosage: '25-200mg daily in divided doses.',
+    sideEffects: ['Fatigue', 'Dizziness', 'Slow heart rate', 'Depression'],
+    warnings: ['Do not discontinue abruptly', 'Avoid in severe asthma'],
+    interactions: ['Verapamil', 'Diltiazem', 'Antidiabetic drugs'],
+    storage: 'Store below 25°C'
+  },
+  'losartan': {
+    name: 'Losartan',
+    genericName: 'Losartan Potassium',
+    category: 'ARB (Angiotensin Receptor Blocker)',
+    usage: 'High blood pressure and kidney protection in diabetes.',
+    dosage: '50-100mg once daily.',
+    sideEffects: ['Dizziness', 'Fatigue', 'Hyperkalemia', 'Cough (rare)'],
+    warnings: ['Avoid in pregnancy', 'Monitor potassium levels', 'Stay hydrated'],
+    interactions: ['Potassium supplements', 'NSAIDs', 'Lithium'],
+    storage: 'Store at room temperature'
+  },
+  'ramipril': {
+    name: 'Ramipril',
+    genericName: 'Ramipril',
+    category: 'ACE Inhibitor',
+    usage: 'High blood pressure, heart failure, and post-heart attack care.',
+    dosage: '2.5-10mg once daily.',
+    sideEffects: ['Dry cough', 'Dizziness', 'Hyperkalemia', 'Angioedema (rare)'],
+    warnings: ['Not for pregnant women', 'Report persistent cough', 'Monitor kidney function'],
+    interactions: ['NSAIDs', 'Potassium-sparing diuretics', 'Lithium'],
+    storage: 'Store below 25°C'
+  },
+  'enalapril': {
+    name: 'Enalapril',
+    genericName: 'Enalapril Maleate',
+    category: 'ACE Inhibitor',
+    usage: 'Hypertension and heart failure.',
+    dosage: '5-40mg daily in 1-2 doses.',
+    sideEffects: ['Dry cough', 'Dizziness', 'Headache', 'Fatigue'],
+    warnings: ['Avoid in pregnancy', 'Monitor kidney function'],
+    storage: 'Store at room temperature'
+  },
+  'olmesartan': {
+    name: 'Olmesartan',
+    genericName: 'Olmesartan Medoxomil',
+    category: 'ARB',
+    usage: 'High blood pressure.',
+    dosage: '20-40mg once daily.',
+    sideEffects: ['Dizziness', 'Diarrhea', 'Upper respiratory infection'],
+    warnings: ['Not in pregnancy', 'May cause sprue-like enteropathy'],
+    storage: 'Store below 30°C'
+  },
+
+  // Additional medicines (unique entries only)
+  'glycomet': {
+    name: 'Glycomet',
+    genericName: 'Metformin 500mg',
+    category: 'Antidiabetic',
+    usage: 'Type 2 diabetes management.',
+    dosage: '500mg-1000mg twice daily with meals.',
+    sideEffects: ['Nausea', 'Diarrhea', 'Abdominal discomfort'],
+    warnings: ['Take with meals', 'Avoid in kidney disease', 'Monitor blood sugar'],
+    storage: 'Store below 30°C'
+  },
+  'gliclazide': {
+    name: 'Gliclazide',
+    genericName: 'Gliclazide',
+    category: 'Sulfonylurea',
+    usage: 'Type 2 diabetes.',
+    dosage: '40-320mg daily with meals.',
+    sideEffects: ['Hypoglycemia', 'Weight gain', 'GI upset'],
+    warnings: ['Take with meals', 'Monitor blood sugar regularly'],
+    storage: 'Store at room temperature'
+  },
+  'sitagliptin': {
+    name: 'Sitagliptin',
+    genericName: 'Sitagliptin Phosphate',
+    category: 'DPP-4 Inhibitor',
+    usage: 'Type 2 diabetes, often with metformin.',
+    dosage: '100mg once daily.',
+    sideEffects: ['Upper respiratory infection', 'Headache', 'Pancreatitis (rare)'],
+    warnings: ['Report severe abdominal pain', 'Adjust dose in kidney impairment'],
+    storage: 'Store at room temperature'
+  },
+  'januvia': {
+    name: 'Januvia',
+    genericName: 'Sitagliptin 100mg',
+    category: 'DPP-4 Inhibitor',
+    usage: 'Type 2 diabetes management.',
+    dosage: '1 tablet once daily.',
+    sideEffects: ['Cold symptoms', 'Headache', 'Stomach upset'],
+    warnings: ['Can be taken with or without food', 'Monitor for signs of pancreatitis'],
+    storage: 'Store below 30°C'
+  },
+  'dapagliflozin': {
+    name: 'Dapagliflozin',
+    genericName: 'Dapagliflozin',
+    category: 'SGLT2 Inhibitor',
+    usage: 'Type 2 diabetes and heart failure.',
+    dosage: '10mg once daily in the morning.',
+    sideEffects: ['Urinary tract infections', 'Genital yeast infections', 'Dehydration'],
+    warnings: ['Stay well hydrated', 'Monitor for UTI symptoms'],
+    storage: 'Store below 30°C'
+  },
+  'empagliflozin': {
+    name: 'Empagliflozin',
+    genericName: 'Empagliflozin',
+    category: 'SGLT2 Inhibitor',
+    usage: 'Type 2 diabetes and cardiovascular protection.',
+    dosage: '10-25mg once daily.',
+    sideEffects: ['Genital infections', 'UTI', 'Increased urination'],
+    warnings: ['Maintain hydration', 'Watch for ketoacidosis symptoms'],
+    storage: 'Store at room temperature'
+  },
+  'telma': {
+    name: 'Telma',
+    genericName: 'Telmisartan 40mg',
+    category: 'ARB (Angiotensin Receptor Blocker)',
+    usage: 'High blood pressure and cardiovascular protection.',
+    dosage: '40-80mg once daily.',
+    sideEffects: ['Dizziness', 'Back pain', 'Diarrhea'],
+    warnings: ['Not for pregnant women', 'Monitor kidney function'],
+    interactions: ['NSAIDs', 'Potassium supplements', 'Lithium'],
+    storage: 'Store below 30°C'
+  },
+  'telma h': {
+    name: 'Telma H',
+    genericName: 'Telmisartan 40mg + Hydrochlorothiazide 12.5mg',
+    category: 'ARB + Diuretic',
+    usage: 'High blood pressure when single drug is not sufficient.',
+    dosage: '1 tablet once daily.',
+    sideEffects: ['Dizziness', 'Dehydration', 'Electrolyte imbalance'],
+    warnings: ['Stay hydrated', 'Monitor electrolytes', 'Not in pregnancy'],
+    storage: 'Store in a dry place'
+  },
+  'metoprolol': {
+    name: 'Metoprolol',
+    genericName: 'Metoprolol Tartrate/Succinate',
+    category: 'Beta Blocker',
+    usage: 'Hypertension, angina, heart failure.',
+    dosage: '25-200mg daily in divided doses.',
+    sideEffects: ['Fatigue', 'Dizziness', 'Slow heart rate'],
+    warnings: ['Do not discontinue abruptly', 'Avoid in severe asthma'],
+    storage: 'Store below 25°C'
+  },
+  'ramipril': {
+    name: 'Ramipril',
+    genericName: 'Ramipril',
+    category: 'ACE Inhibitor',
+    usage: 'High blood pressure, heart failure.',
+    dosage: '2.5-10mg once daily.',
+    sideEffects: ['Dry cough', 'Dizziness', 'Hyperkalemia'],
+    warnings: ['Not for pregnant women', 'Report persistent cough'],
+    storage: 'Store below 25°C'
+  },
+  'rosuvastatin': {
+    name: 'Rosuvastatin',
+    genericName: 'Rosuvastatin Calcium',
+    category: 'Statin',
+    usage: 'High cholesterol and triglycerides.',
+    dosage: '5-40mg once daily.',
+    sideEffects: ['Muscle pain', 'Headache', 'Abdominal pain'],
+    warnings: ['Start with low dose', 'Monitor liver enzymes'],
+    storage: 'Store at room temperature'
+  },
+  'crestor': {
+    name: 'Crestor',
+    genericName: 'Rosuvastatin 10mg/20mg',
+    category: 'Statin',
+    usage: 'Cholesterol management.',
+    dosage: '5-20mg once daily.',
+    sideEffects: ['Muscle pain', 'Constipation', 'Nausea'],
+    warnings: ['Can be taken any time of day', 'Regular blood tests needed'],
+    storage: 'Store below 30°C'
+  },
+  'thyronorm': {
+    name: 'Thyronorm',
+    genericName: 'Levothyroxine Sodium',
+    category: 'Thyroid Hormone',
+    usage: 'Hypothyroidism and goiter.',
+    dosage: '25-150mcg once daily before breakfast.',
+    sideEffects: ['Rapid heartbeat', 'Tremor', 'Weight loss'],
+    warnings: ['Take 30-60 min before food', 'Regular monitoring'],
+    storage: 'Store below 25°C'
+  },
+  'eltroxin': {
+    name: 'Eltroxin',
+    genericName: 'Levothyroxine 25mcg/50mcg/100mcg',
+    category: 'Thyroid Hormone',
+    usage: 'Hypothyroidism treatment.',
+    dosage: 'As prescribed, usually 25-100mcg daily.',
+    sideEffects: ['Palpitations', 'Nervousness', 'Weight changes'],
+    warnings: ['Empty stomach in morning', 'Separate from other medications by 4 hours'],
+    storage: 'Store in a cool, dry place'
+  },
+  'carbimazole': {
+    name: 'Carbimazole',
+    genericName: 'Carbimazole',
+    category: 'Antithyroid',
+    usage: 'Hyperthyroidism (overactive thyroid).',
+    dosage: '15-40mg daily initially, then maintenance 5-15mg.',
+    sideEffects: ['Skin rash', 'Nausea', 'Headache', 'Joint pain'],
+    warnings: ['Regular blood tests for WBC count', 'Report sore throat or fever immediately'],
+    storage: 'Store at room temperature'
+  },
+  'zerodol sp': {
+    name: 'Zerodol SP',
+    genericName: 'Aceclofenac + Paracetamol + Serratiopeptidase',
+    category: 'NSAID + Enzyme',
+    usage: 'Pain, inflammation, and swelling.',
+    dosage: '1 tablet twice daily.',
+    sideEffects: ['GI upset', 'Nausea', 'Rash'],
+    warnings: ['Take after food', 'Not in peptic ulcer'],
+    storage: 'Store in a cool place'
+  },
+  'ultracet': {
+    name: 'Ultracet',
+    genericName: 'Tramadol 37.5mg + Paracetamol 325mg',
+    category: 'Opioid Analgesic Combination',
+    usage: 'Moderate to severe pain.',
+    dosage: '1-2 tablets every 4-6 hours. Maximum 8 tablets daily.',
+    sideEffects: ['Nausea', 'Dizziness', 'Drowsiness', 'Constipation'],
+    warnings: ['May cause dependence', 'Do not drive', 'Avoid alcohol'],
+    storage: 'Store at room temperature'
+  },
+  'flexon': {
+    name: 'Flexon',
+    genericName: 'Ibuprofen 400mg + Paracetamol 325mg',
+    category: 'NSAID + Analgesic',
+    usage: 'Pain, fever, and inflammation.',
+    dosage: '1 tablet 3 times daily after food.',
+    sideEffects: ['Stomach upset', 'Nausea', 'Drowsiness'],
+    warnings: ['Take after meals', 'Avoid on empty stomach'],
+    storage: 'Store below 25°C'
+  },
+  'saridon': {
+    name: 'Saridon',
+    genericName: 'Paracetamol + Propyphenazone + Caffeine',
+    category: 'Analgesic Combination',
+    usage: 'Headache, toothache, and body aches.',
+    dosage: '1 tablet as needed. Maximum 3 tablets daily.',
+    sideEffects: ['Nausea', 'Stomach upset', 'Nervousness'],
+    warnings: ['Contains caffeine', 'Not for regular use'],
+    storage: 'Store in a dry place'
+  },
+  'volini': {
+    name: 'Volini',
+    genericName: 'Diclofenac Diethylamine',
+    category: 'Topical NSAID',
+    usage: 'Muscle sprains, joint pain, and back pain.',
+    dosage: 'Apply 3-4 times daily.',
+    sideEffects: ['Skin irritation', 'Rash'],
+    warnings: ['External use only', 'Avoid eyes'],
+    storage: 'Store at room temperature'
+  },
+  'moov': {
+    name: 'Moov Cream',
+    genericName: 'Diclofenac Diethylamine + Linseed Oil + Menthol',
+    category: 'Topical Analgesic',
+    usage: 'Muscle pain, back pain, and joint pain.',
+    dosage: 'Apply to affected area 3-4 times daily.',
+    sideEffects: ['Skin irritation', 'Redness'],
+    warnings: ['For external use only', 'Avoid on broken skin'],
+    storage: 'Store below 30°C'
+  },
+  'montek lc': {
+    name: 'Montek LC',
+    genericName: 'Montelukast 10mg + Levocetirizine 5mg',
+    category: 'Antiallergic',
+    usage: 'Allergic rhinitis and asthma.',
+    dosage: '1 tablet once daily in evening.',
+    sideEffects: ['Drowsiness', 'Dry mouth', 'Headache'],
+    warnings: ['Take in evening', 'May cause drowsiness'],
+    storage: 'Store below 25°C'
+  },
+  'asthalin': {
+    name: 'Asthalin',
+    genericName: 'Salbutamol',
+    category: 'Bronchodilator',
+    usage: 'Asthma and bronchospasm.',
+    dosage: 'Inhaler: 1-2 puffs as needed.',
+    sideEffects: ['Tremor', 'Palpitations', 'Headache'],
+    warnings: ['Do not overuse inhaler', 'Shake well before use'],
+    storage: 'Store away from heat'
+  },
+  'shelcal': {
+    name: 'Shelcal',
+    genericName: 'Calcium Carbonate + Vitamin D3',
+    category: 'Calcium Supplement',
+    usage: 'Calcium deficiency and bone health.',
+    dosage: '1 tablet daily with food.',
+    sideEffects: ['Constipation', 'Gas', 'Bloating'],
+    warnings: ['Take with meals', 'Space from thyroid medication'],
+    storage: 'Store in a cool, dry place'
+  },
+  'neurobion': {
+    name: 'Neurobion',
+    genericName: 'Vitamin B1 + B6 + B12',
+    category: 'Vitamin B Complex',
+    usage: 'Nerve health and vitamin B deficiency.',
+    dosage: '1 tablet 1-3 times daily.',
+    sideEffects: ['Nausea', 'Flushing'],
+    warnings: ['May turn urine yellow', 'Take with food'],
+    storage: 'Store below 25°C'
+  },
+  'livogen': {
+    name: 'Livogen',
+    genericName: 'Ferrous Fumarate + Folic Acid',
+    category: 'Iron + Folic Acid',
+    usage: 'Anemia and pregnancy support.',
+    dosage: '1 tablet daily.',
+    sideEffects: ['Constipation', 'Dark stools', 'Nausea'],
+    warnings: ['Take after meals', 'May cause constipation'],
+    storage: 'Store below 30°C'
   }
 };
 
