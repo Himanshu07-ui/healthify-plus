@@ -142,7 +142,7 @@ export const AIDoctorChat = () => {
     }
   }, []);
 
-  // Play audio from queue sequentially
+  // Play audio from queue sequentially using browser TTS
   const playNextInQueue = useCallback(async () => {
     if (isPlayingRef.current || audioQueueRef.current.length === 0) {
       if (audioQueueRef.current.length === 0) {
@@ -155,6 +155,7 @@ export const AIDoctorChat = () => {
     setIsSpeaking(true);
     const text = audioQueueRef.current.shift()!;
 
+    // Try ElevenLabs first, fallback to browser TTS
     try {
       const response = await fetch(TTS_URL, {
         method: 'POST',
@@ -165,32 +166,59 @@ export const AIDoctorChat = () => {
         body: JSON.stringify({ text, language }),
       });
 
-      if (!response.ok) throw new Error('TTS failed');
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-      
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        isPlayingRef.current = false;
-        playNextInQueue();
-      };
-      
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        isPlayingRef.current = false;
-        playNextInQueue();
-      };
-      
-      await audio.play();
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+        
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          isPlayingRef.current = false;
+          playNextInQueue();
+        };
+        
+        audio.onerror = () => {
+          URL.revokeObjectURL(audioUrl);
+          isPlayingRef.current = false;
+          playNextInQueue();
+        };
+        
+        await audio.play();
+        return;
+      }
     } catch (error) {
-      console.error('TTS error:', error);
+      console.log('ElevenLabs unavailable, using browser TTS');
+    }
+
+    // Fallback to browser Speech Synthesis
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === 'hi' ? 'hi-IN' : 'en-US';
+    utterance.rate = 0.95;
+    utterance.pitch = language === 'hi' ? 1.0 : 0.9;
+    
+    // Try to get a good voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => 
+      language === 'hi' 
+        ? v.lang.includes('hi')
+        : (v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Alex')) && v.lang.includes('en')
+    );
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    utterance.onend = () => {
       isPlayingRef.current = false;
       playNextInQueue();
-    }
+    };
+    utterance.onerror = () => {
+      isPlayingRef.current = false;
+      playNextInQueue();
+    };
+    
+    window.speechSynthesis.speak(utterance);
   }, [language]);
 
   // Queue text for speaking
