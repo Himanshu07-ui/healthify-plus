@@ -42,8 +42,8 @@ interface MCQQuestion {
   options: { label: string; symptomIds: string[] }[];
 }
 
-// MCQ-style questions for guided symptom collection
-const mcqQuestions: MCQQuestion[] = [
+// Base questions asked for all concerns
+const baseQuestions: MCQQuestion[] = [
   {
     id: 'main-concern',
     question: 'What is your main concern today?',
@@ -52,6 +52,8 @@ const mcqQuestions: MCQQuestion[] = [
       { label: 'Pain or discomfort', symptomIds: ['body-aches'] },
       { label: 'Breathing or respiratory issues', symptomIds: ['cough'] },
       { label: 'Digestive problems', symptomIds: ['nausea', 'abdominal-pain'] },
+      { label: 'Head / neurological issues', symptomIds: ['headache'] },
+      { label: 'Heart / chest concerns', symptomIds: ['chest-pain'] },
     ],
   },
   {
@@ -65,56 +67,284 @@ const mcqQuestions: MCQQuestion[] = [
     ],
   },
   {
-    id: 'fever-check',
-    question: 'Do you have a fever?',
+    id: 'severity',
+    question: 'How severe are your symptoms overall?',
     options: [
-      { label: 'No fever', symptomIds: [] },
-      { label: 'Mild fever (99-100°F)', symptomIds: ['fever'] },
-      { label: 'Moderate fever (100-102°F)', symptomIds: ['fever', 'chills'] },
-      { label: 'High fever (above 102°F)', symptomIds: ['high-fever', 'chills'] },
-    ],
-  },
-  {
-    id: 'pain-location',
-    question: 'Where is your pain or discomfort?',
-    options: [
-      { label: 'Head or neck', symptomIds: ['headache', 'neck-pain'] },
-      { label: 'Chest area', symptomIds: ['chest-pain', 'chest-tightness'] },
-      { label: 'Stomach or abdomen', symptomIds: ['abdominal-pain'] },
-      { label: 'Muscles or joints', symptomIds: ['muscle-pain', 'joint-pain'] },
-    ],
-  },
-  {
-    id: 'breathing',
-    question: 'Any breathing difficulties?',
-    options: [
-      { label: 'Breathing is normal', symptomIds: [] },
-      { label: 'Mild shortness of breath', symptomIds: ['shortness-breath'] },
-      { label: 'Wheezing or chest tightness', symptomIds: ['wheezing', 'chest-tightness'] },
-      { label: 'Difficulty breathing at rest', symptomIds: ['shortness-breath'] },
-    ],
-  },
-  {
-    id: 'throat-nose',
-    question: 'Any throat or nose symptoms?',
-    options: [
-      { label: 'None', symptomIds: [] },
-      { label: 'Sore throat', symptomIds: ['sore-throat'] },
-      { label: 'Runny or stuffy nose', symptomIds: ['runny-nose', 'sneezing'] },
-      { label: 'Both throat and nose issues', symptomIds: ['sore-throat', 'runny-nose'] },
-    ],
-  },
-  {
-    id: 'additional',
-    question: 'Any additional symptoms?',
-    options: [
-      { label: 'Nausea or vomiting', symptomIds: ['nausea', 'vomiting'] },
-      { label: 'Fatigue or weakness', symptomIds: ['fatigue', 'muscle-weakness'] },
-      { label: 'Dizziness or confusion', symptomIds: ['dizziness', 'confusion'] },
-      { label: 'None of these', symptomIds: [] },
+      { label: 'Mild - Noticeable but manageable', symptomIds: [] },
+      { label: 'Moderate - Affecting daily activities', symptomIds: [] },
+      { label: 'Severe - Significantly limiting activities', symptomIds: [] },
+      { label: 'Very severe - Unable to function normally', symptomIds: [] },
     ],
   },
 ];
+
+// Follow-up questions based on main concern
+const concernSpecificQuestions: Record<string, MCQQuestion[]> = {
+  'Fever or feeling unwell': [
+    {
+      id: 'fever-temp',
+      question: 'What is your approximate temperature?',
+      options: [
+        { label: 'Slightly elevated (99-100°F / 37.2-37.8°C)', symptomIds: ['fever'] },
+        { label: 'Moderate fever (100-102°F / 37.8-38.9°C)', symptomIds: ['fever', 'chills'] },
+        { label: 'High fever (102-104°F / 38.9-40°C)', symptomIds: ['high-fever', 'chills'] },
+        { label: 'Very high (>104°F / >40°C)', symptomIds: ['high-fever', 'chills'] },
+      ],
+    },
+    {
+      id: 'fever-pattern',
+      question: 'How does your fever behave?',
+      options: [
+        { label: 'Constant - stays elevated', symptomIds: [] },
+        { label: 'Comes and goes throughout the day', symptomIds: [] },
+        { label: 'Worse at night with sweating', symptomIds: ['excessive-sweating', 'chills'] },
+        { label: 'Only noticed after physical activity', symptomIds: [] },
+      ],
+    },
+    {
+      id: 'fever-accompanying',
+      question: 'What else are you experiencing with the fever?',
+      options: [
+        { label: 'Sore throat and runny nose', symptomIds: ['sore-throat', 'runny-nose'] },
+        { label: 'Body aches and chills', symptomIds: ['body-aches', 'chills'] },
+        { label: 'Skin rash', symptomIds: ['rash'] },
+        { label: 'No other major symptoms', symptomIds: [] },
+      ],
+    },
+    {
+      id: 'fever-medication',
+      question: 'Have you taken any fever-reducing medications?',
+      options: [
+        { label: 'No, not yet', symptomIds: [] },
+        { label: 'Yes, and it helps temporarily', symptomIds: [] },
+        { label: 'Yes, but no improvement at all', symptomIds: [] },
+        { label: 'Yes, but fever returns quickly', symptomIds: [] },
+      ],
+    },
+  ],
+  'Pain or discomfort': [
+    {
+      id: 'pain-location',
+      question: 'Where is your pain located?',
+      options: [
+        { label: 'Head or neck area', symptomIds: ['headache', 'neck-pain'] },
+        { label: 'Back (upper or lower)', symptomIds: ['back-pain'] },
+        { label: 'Muscles throughout body', symptomIds: ['muscle-pain', 'body-aches'] },
+        { label: 'Joints (knees, hips, etc.)', symptomIds: ['joint-pain'] },
+      ],
+    },
+    {
+      id: 'pain-type',
+      question: 'How would you describe the pain?',
+      options: [
+        { label: 'Sharp or stabbing', symptomIds: [] },
+        { label: 'Dull and constant ache', symptomIds: [] },
+        { label: 'Throbbing or pulsating', symptomIds: [] },
+        { label: 'Burning sensation', symptomIds: [] },
+      ],
+    },
+    {
+      id: 'pain-movement',
+      question: 'How does movement affect your pain?',
+      options: [
+        { label: 'Improves with movement', symptomIds: [] },
+        { label: 'Worsens with movement', symptomIds: [] },
+        { label: 'Stiff in morning, better later', symptomIds: [] },
+        { label: 'No change with movement', symptomIds: [] },
+      ],
+    },
+    {
+      id: 'pain-swelling',
+      question: 'Is there any visible swelling or redness?',
+      options: [
+        { label: 'No visible changes', symptomIds: [] },
+        { label: 'Mild swelling present', symptomIds: [] },
+        { label: 'Significant swelling with redness', symptomIds: [] },
+        { label: 'Warm to touch and very swollen', symptomIds: [] },
+      ],
+    },
+  ],
+  'Breathing or respiratory issues': [
+    {
+      id: 'resp-main',
+      question: 'What is your main respiratory symptom?',
+      options: [
+        { label: 'Dry cough (no mucus)', symptomIds: ['cough'] },
+        { label: 'Productive cough (with mucus)', symptomIds: ['wet-cough'] },
+        { label: 'Shortness of breath', symptomIds: ['shortness-breath'] },
+        { label: 'Wheezing or whistling sound', symptomIds: ['wheezing'] },
+      ],
+    },
+    {
+      id: 'resp-mucus',
+      question: 'If you have mucus/phlegm, what color is it?',
+      options: [
+        { label: 'No mucus or clear/white', symptomIds: [] },
+        { label: 'Yellow colored', symptomIds: ['wet-cough'] },
+        { label: 'Green colored', symptomIds: ['wet-cough', 'fever'] },
+        { label: 'Brown or blood-tinged', symptomIds: [] },
+      ],
+    },
+    {
+      id: 'resp-trigger',
+      question: 'What triggers or worsens your symptoms?',
+      options: [
+        { label: 'Physical activity or exertion', symptomIds: ['shortness-breath'] },
+        { label: 'Lying down at night', symptomIds: [] },
+        { label: 'Cold air, dust, or allergens', symptomIds: ['sneezing', 'runny-nose'] },
+        { label: 'Constant, no specific trigger', symptomIds: [] },
+      ],
+    },
+    {
+      id: 'resp-chest',
+      question: 'Any chest symptoms?',
+      options: [
+        { label: 'No chest symptoms', symptomIds: [] },
+        { label: 'Mild chest tightness', symptomIds: ['chest-tightness'] },
+        { label: 'Chest pain when breathing', symptomIds: ['chest-pain'] },
+        { label: 'Rapid or irregular heartbeat', symptomIds: ['rapid-heartbeat', 'palpitations'] },
+      ],
+    },
+  ],
+  'Digestive problems': [
+    {
+      id: 'digest-type',
+      question: 'What type of digestive issue are you having?',
+      options: [
+        { label: 'Nausea or vomiting', symptomIds: ['nausea', 'vomiting'] },
+        { label: 'Diarrhea', symptomIds: ['diarrhea'] },
+        { label: 'Constipation', symptomIds: ['constipation'] },
+        { label: 'Stomach pain or cramps', symptomIds: ['abdominal-pain'] },
+      ],
+    },
+    {
+      id: 'digest-location',
+      question: 'Where is the discomfort located?',
+      options: [
+        { label: 'Upper abdomen (stomach area)', symptomIds: ['abdominal-pain', 'heartburn'] },
+        { label: 'Lower abdomen', symptomIds: ['abdominal-pain'] },
+        { label: 'Around the navel', symptomIds: ['abdominal-pain'] },
+        { label: 'All over the abdomen', symptomIds: ['severe-abdominal'] },
+      ],
+    },
+    {
+      id: 'digest-eating',
+      question: 'How does eating affect your symptoms?',
+      options: [
+        { label: 'Symptoms worsen after eating', symptomIds: ['heartburn', 'bloating'] },
+        { label: 'Symptoms improve after eating', symptomIds: [] },
+        { label: 'No change with eating', symptomIds: [] },
+        { label: 'Unable to eat due to symptoms', symptomIds: ['loss-appetite', 'nausea'] },
+      ],
+    },
+    {
+      id: 'digest-other',
+      question: 'Any other accompanying symptoms?',
+      options: [
+        { label: 'Fever and chills', symptomIds: ['fever', 'chills'] },
+        { label: 'Bloating and gas', symptomIds: ['bloating'] },
+        { label: 'Heartburn or acid reflux', symptomIds: ['heartburn'] },
+        { label: 'None of the above', symptomIds: [] },
+      ],
+    },
+  ],
+  'Head / neurological issues': [
+    {
+      id: 'head-type',
+      question: 'How would you describe your headache?',
+      options: [
+        { label: 'Throbbing or pulsating', symptomIds: ['severe-headache'] },
+        { label: 'Tight band around the head', symptomIds: ['headache'] },
+        { label: 'Sharp, stabbing pain', symptomIds: ['severe-headache'] },
+        { label: 'Dull, constant ache', symptomIds: ['headache'] },
+      ],
+    },
+    {
+      id: 'head-location',
+      question: 'Where is the headache located?',
+      options: [
+        { label: 'One side of the head', symptomIds: ['severe-headache'] },
+        { label: 'Both sides equally', symptomIds: ['headache'] },
+        { label: 'Behind the eyes', symptomIds: ['headache', 'eye-pain'] },
+        { label: 'Back of head/neck', symptomIds: ['headache', 'neck-pain'] },
+      ],
+    },
+    {
+      id: 'head-symptoms',
+      question: 'Do you have any accompanying symptoms?',
+      options: [
+        { label: 'Sensitivity to light or sound', symptomIds: ['light-sensitivity'] },
+        { label: 'Nausea or vomiting', symptomIds: ['nausea', 'vomiting'] },
+        { label: 'Visual disturbances (aura, spots)', symptomIds: ['blurred-vision'] },
+        { label: 'Stiff neck', symptomIds: ['neck-pain'] },
+      ],
+    },
+    {
+      id: 'head-neuro',
+      question: 'Have you noticed any neurological changes?',
+      options: [
+        { label: 'No changes', symptomIds: [] },
+        { label: 'Confusion or difficulty thinking', symptomIds: ['confusion'] },
+        { label: 'Weakness or numbness', symptomIds: ['numbness', 'muscle-weakness'] },
+        { label: 'Dizziness or balance issues', symptomIds: ['dizziness'] },
+      ],
+    },
+  ],
+  'Heart / chest concerns': [
+    {
+      id: 'heart-type',
+      question: 'What type of chest symptom are you experiencing?',
+      options: [
+        { label: 'Sharp, stabbing pain', symptomIds: ['chest-pain'] },
+        { label: 'Pressure or squeezing sensation', symptomIds: ['chest-pressure'] },
+        { label: 'Racing or irregular heartbeat', symptomIds: ['palpitations', 'rapid-heartbeat'] },
+        { label: 'Burning sensation (like heartburn)', symptomIds: ['heartburn', 'chest-pain'] },
+      ],
+    },
+    {
+      id: 'heart-radiation',
+      question: 'Does the pain spread to other areas?',
+      options: [
+        { label: 'No, stays in chest only', symptomIds: [] },
+        { label: 'To left arm or shoulder', symptomIds: ['chest-pressure'] },
+        { label: 'To jaw, neck, or back', symptomIds: ['chest-pressure', 'neck-pain'] },
+        { label: 'To right side or abdomen', symptomIds: ['chest-pain'] },
+      ],
+    },
+    {
+      id: 'heart-trigger',
+      question: 'What triggers or worsens your symptoms?',
+      options: [
+        { label: 'Physical exertion', symptomIds: ['shortness-breath'] },
+        { label: 'Eating or lying down', symptomIds: ['heartburn'] },
+        { label: 'Emotional stress or anxiety', symptomIds: ['anxiety', 'palpitations'] },
+        { label: 'Occurs at rest without trigger', symptomIds: ['chest-pressure'] },
+      ],
+    },
+    {
+      id: 'heart-other',
+      question: 'Any other symptoms present?',
+      options: [
+        { label: 'Sweating with chest pain', symptomIds: ['excessive-sweating', 'chest-pressure'] },
+        { label: 'Shortness of breath', symptomIds: ['shortness-breath'] },
+        { label: 'Dizziness or lightheadedness', symptomIds: ['dizziness'] },
+        { label: 'None of these', symptomIds: [] },
+      ],
+    },
+  ],
+};
+
+// Closing question
+const closingQuestion: MCQQuestion = {
+  id: 'additional',
+  question: 'Any additional symptoms we should know about?',
+  options: [
+    { label: 'Fatigue or weakness', symptomIds: ['fatigue', 'muscle-weakness'] },
+    { label: 'Sleep problems or insomnia', symptomIds: ['insomnia'] },
+    { label: 'Anxiety or stress', symptomIds: ['anxiety'] },
+    { label: 'None of the above', symptomIds: [] },
+  ],
+};
 
 // Common symptoms for quick selection
 const commonSymptoms: Symptom[] = [
@@ -410,6 +640,26 @@ export const SymptomChecker = () => {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [results, setResults] = useState<DiagnosisResult[] | null>(null);
 
+  // Get the selected main concern label
+  const getSelectedConcern = (): string | null => {
+    const mainConcernAnswer = mcqAnswers['main-concern'];
+    if (mainConcernAnswer !== undefined) {
+      return baseQuestions[0].options[mainConcernAnswer]?.label || null;
+    }
+    return null;
+  };
+
+  // Build dynamic questions based on selected main concern
+  const getMcqQuestions = (): MCQQuestion[] => {
+    const selectedConcern = getSelectedConcern();
+    const concernQuestions = selectedConcern ? concernSpecificQuestions[selectedConcern] || [] : [];
+    
+    // Structure: Base questions (main-concern, duration, severity) -> Concern-specific questions -> Closing question
+    return [...baseQuestions, ...concernQuestions, closingQuestion];
+  };
+
+  const mcqQuestions = getMcqQuestions();
+
   const toggleSymptom = (symptomId: string) => {
     setSelectedSymptoms(prev =>
       prev.includes(symptomId)
@@ -419,7 +669,24 @@ export const SymptomChecker = () => {
   };
 
   const handleMCQAnswer = (questionId: string, optionIndex: number) => {
-    setMcqAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
+    setMcqAnswers(prev => {
+      const newAnswers = { ...prev, [questionId]: optionIndex };
+      
+      // If answering main-concern, reset follow-up questions
+      if (questionId === 'main-concern') {
+        // Keep only base question answers
+        const baseIds = baseQuestions.map(q => q.id);
+        const filtered: Record<string, number> = {};
+        Object.entries(newAnswers).forEach(([key, val]) => {
+          if (baseIds.includes(key)) {
+            filtered[key] = val;
+          }
+        });
+        return filtered;
+      }
+      
+      return newAnswers;
+    });
   };
 
   const nextQuestion = () => {
@@ -488,7 +755,8 @@ export const SymptomChecker = () => {
     }
   };
 
-  const progress = ((currentQuestion + 1) / mcqQuestions.length) * 100;
+  const totalQuestions = mcqQuestions.length;
+  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const currentQ = mcqQuestions[currentQuestion];
   const canProceedMCQ = mcqAnswers[currentQ?.id] !== undefined;
 
