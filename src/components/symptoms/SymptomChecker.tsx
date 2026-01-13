@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Stethoscope, AlertCircle, CheckCircle, Search, X, Sparkles, ArrowRight, RotateCcw } from 'lucide-react';
+import { Stethoscope, AlertCircle, CheckCircle, ArrowRight, RotateCcw, Clock, Thermometer, Activity, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 
 interface Symptom {
   id: string;
@@ -34,6 +36,86 @@ interface ConditionRule {
   urgency: 'emergency' | 'urgent' | 'routine' | 'self-care';
 }
 
+interface MCQQuestion {
+  id: string;
+  question: string;
+  options: { label: string; symptomIds: string[] }[];
+}
+
+// MCQ-style questions for guided symptom collection
+const mcqQuestions: MCQQuestion[] = [
+  {
+    id: 'main-concern',
+    question: 'What is your main concern today?',
+    options: [
+      { label: 'Fever or feeling unwell', symptomIds: ['fever', 'fatigue'] },
+      { label: 'Pain or discomfort', symptomIds: ['body-aches'] },
+      { label: 'Breathing or respiratory issues', symptomIds: ['cough'] },
+      { label: 'Digestive problems', symptomIds: ['nausea', 'abdominal-pain'] },
+    ],
+  },
+  {
+    id: 'duration',
+    question: 'How long have you had these symptoms?',
+    options: [
+      { label: 'Just started today', symptomIds: [] },
+      { label: '1-3 days', symptomIds: [] },
+      { label: '4-7 days', symptomIds: [] },
+      { label: 'More than a week', symptomIds: [] },
+    ],
+  },
+  {
+    id: 'fever-check',
+    question: 'Do you have a fever?',
+    options: [
+      { label: 'No fever', symptomIds: [] },
+      { label: 'Mild fever (99-100°F)', symptomIds: ['fever'] },
+      { label: 'Moderate fever (100-102°F)', symptomIds: ['fever', 'chills'] },
+      { label: 'High fever (above 102°F)', symptomIds: ['high-fever', 'chills'] },
+    ],
+  },
+  {
+    id: 'pain-location',
+    question: 'Where is your pain or discomfort?',
+    options: [
+      { label: 'Head or neck', symptomIds: ['headache', 'neck-pain'] },
+      { label: 'Chest area', symptomIds: ['chest-pain', 'chest-tightness'] },
+      { label: 'Stomach or abdomen', symptomIds: ['abdominal-pain'] },
+      { label: 'Muscles or joints', symptomIds: ['muscle-pain', 'joint-pain'] },
+    ],
+  },
+  {
+    id: 'breathing',
+    question: 'Any breathing difficulties?',
+    options: [
+      { label: 'Breathing is normal', symptomIds: [] },
+      { label: 'Mild shortness of breath', symptomIds: ['shortness-breath'] },
+      { label: 'Wheezing or chest tightness', symptomIds: ['wheezing', 'chest-tightness'] },
+      { label: 'Difficulty breathing at rest', symptomIds: ['shortness-breath'] },
+    ],
+  },
+  {
+    id: 'throat-nose',
+    question: 'Any throat or nose symptoms?',
+    options: [
+      { label: 'None', symptomIds: [] },
+      { label: 'Sore throat', symptomIds: ['sore-throat'] },
+      { label: 'Runny or stuffy nose', symptomIds: ['runny-nose', 'sneezing'] },
+      { label: 'Both throat and nose issues', symptomIds: ['sore-throat', 'runny-nose'] },
+    ],
+  },
+  {
+    id: 'additional',
+    question: 'Any additional symptoms?',
+    options: [
+      { label: 'Nausea or vomiting', symptomIds: ['nausea', 'vomiting'] },
+      { label: 'Fatigue or weakness', symptomIds: ['fatigue', 'muscle-weakness'] },
+      { label: 'Dizziness or confusion', symptomIds: ['dizziness', 'confusion'] },
+      { label: 'None of these', symptomIds: [] },
+    ],
+  },
+];
+
 // Common symptoms for quick selection
 const commonSymptoms: Symptom[] = [
   { id: 'fever', name: 'Fever', category: 'General', severity: 2 },
@@ -44,6 +126,10 @@ const commonSymptoms: Symptom[] = [
   { id: 'body-aches', name: 'Body Aches', category: 'General', severity: 2 },
   { id: 'nausea', name: 'Nausea', category: 'Digestive', severity: 2 },
   { id: 'runny-nose', name: 'Runny Nose', category: 'Throat', severity: 1 },
+  { id: 'dizziness', name: 'Dizziness', category: 'Head', severity: 2 },
+  { id: 'chest-pain', name: 'Chest Pain', category: 'Heart', severity: 4 },
+  { id: 'shortness-breath', name: 'Shortness of Breath', category: 'Respiratory', severity: 3 },
+  { id: 'abdominal-pain', name: 'Abdominal Pain', category: 'Digestive', severity: 2 },
 ];
 
 const allSymptoms: Symptom[] = [
@@ -252,7 +338,7 @@ const conditionRules: ConditionRule[] = [
     requiredSymptoms: ['heartburn'],
     optionalSymptoms: ['chest-pain', 'difficulty-swallowing', 'sore-throat', 'nausea'],
     minRequired: 1,
-    recommendations: ['Avoid trigger foods', 'Don\'t lie down after eating', 'Elevate head while sleeping', 'Try antacids'],
+    recommendations: ['Avoid trigger foods', "Don't lie down after eating", 'Elevate head while sleeping', 'Try antacids'],
     urgency: 'self-care',
   },
   {
@@ -318,14 +404,11 @@ const diagnose = (selectedSymptoms: string[]): DiagnosisResult[] => {
 };
 
 export const SymptomChecker = () => {
+  const [mode, setMode] = useState<'select' | 'mcq' | 'quick'>('select');
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [results, setResults] = useState<DiagnosisResult[] | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showAllSymptoms, setShowAllSymptoms] = useState(false);
-
-  const filteredSymptoms = allSymptoms.filter(s =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const toggleSymptom = (symptomId: string) => {
     setSelectedSymptoms(prev =>
@@ -335,16 +418,48 @@ export const SymptomChecker = () => {
     );
   };
 
+  const handleMCQAnswer = (questionId: string, optionIndex: number) => {
+    setMcqAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < mcqQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    }
+  };
+
+  const prevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+    }
+  };
+
   const handleAnalyze = () => {
-    const diagnosisResults = diagnose(selectedSymptoms);
+    let symptomsToAnalyze = [...selectedSymptoms];
+
+    // Add symptoms from MCQ answers
+    if (mode === 'mcq') {
+      Object.entries(mcqAnswers).forEach(([questionId, optionIndex]) => {
+        const question = mcqQuestions.find(q => q.id === questionId);
+        if (question && question.options[optionIndex]) {
+          symptomsToAnalyze = [...symptomsToAnalyze, ...question.options[optionIndex].symptomIds];
+        }
+      });
+    }
+
+    // Remove duplicates
+    symptomsToAnalyze = [...new Set(symptomsToAnalyze)];
+    
+    const diagnosisResults = diagnose(symptomsToAnalyze);
     setResults(diagnosisResults);
   };
 
   const reset = () => {
+    setMode('select');
+    setCurrentQuestion(0);
+    setMcqAnswers({});
     setSelectedSymptoms([]);
     setResults(null);
-    setSearchTerm('');
-    setShowAllSymptoms(false);
   };
 
   const getUrgencyStyles = (urgency: string) => {
@@ -373,6 +488,10 @@ export const SymptomChecker = () => {
     }
   };
 
+  const progress = ((currentQuestion + 1) / mcqQuestions.length) * 100;
+  const currentQ = mcqQuestions[currentQuestion];
+  const canProceedMCQ = mcqAnswers[currentQ?.id] !== undefined;
+
   return (
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
@@ -389,218 +508,312 @@ export const SymptomChecker = () => {
             Symptom Checker
           </h1>
           <p className="text-muted-foreground text-sm md:text-base max-w-md mx-auto">
-            Select your symptoms to get instant health insights
+            Answer a few questions to get personalized health insights
           </p>
         </motion.div>
 
         <div className="max-w-2xl mx-auto">
           <AnimatePresence mode="wait">
             {!results ? (
-              <motion.div
-                key="input"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <Card className="p-5 md:p-6">
-                  {/* Selected Symptoms */}
-                  {selectedSymptoms.length > 0 && (
-                    <div className="mb-5">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-foreground">
-                          Selected ({selectedSymptoms.length})
-                        </span>
+              <>
+                {/* Mode Selection */}
+                {mode === 'select' && (
+                  <motion.div
+                    key="select"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card className="p-6">
+                      <h2 className="text-lg font-semibold text-foreground mb-4 text-center">
+                        How would you like to check your symptoms?
+                      </h2>
+                      <div className="grid gap-4">
                         <button
-                          onClick={() => setSelectedSymptoms([])}
-                          className="text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => setMode('mcq')}
+                          className="flex items-center gap-4 p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
                         >
-                          Clear all
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <Activity className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground mb-1">Guided Questions</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Answer 7 simple questions about how you're feeling
+                            </p>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </button>
+
+                        <button
+                          onClick={() => setMode('quick')}
+                          className="flex items-center gap-4 p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center shrink-0">
+                            <Thermometer className="w-6 h-6 text-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground mb-1">Quick Select</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Select symptoms directly from a list
+                            </p>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                         </button>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSymptoms.map(id => {
-                          const symptom = allSymptoms.find(s => s.id === id);
-                          return (
-                            <Badge
-                              key={id}
-                              variant="default"
-                              className="gap-1 cursor-pointer hover:bg-primary/80"
-                              onClick={() => toggleSymptom(id)}
-                            >
-                              {symptom?.name}
-                              <X className="w-3 h-3" />
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                    </Card>
+                  </motion.div>
+                )}
 
-                  {/* Quick Pick */}
-                  {!showAllSymptoms && (
-                    <div className="mb-5">
-                      <span className="text-sm font-medium text-muted-foreground mb-3 block">
-                        Common symptoms
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {commonSymptoms.map(symptom => (
+                {/* MCQ Mode */}
+                {mode === 'mcq' && (
+                  <motion.div
+                    key="mcq"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card className="p-6">
+                      {/* Progress */}
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span className="text-muted-foreground">Question {currentQuestion + 1} of {mcqQuestions.length}</span>
+                          <span className="text-primary font-medium">{Math.round(progress)}%</span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
+                      </div>
+
+                      {/* Question */}
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentQ.id}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <h3 className="text-lg font-semibold text-foreground mb-4">
+                            {currentQ.question}
+                          </h3>
+
+                          <RadioGroup
+                            value={mcqAnswers[currentQ.id]?.toString()}
+                            onValueChange={(value) => handleMCQAnswer(currentQ.id, parseInt(value))}
+                            className="space-y-3"
+                          >
+                            {currentQ.options.map((option, index) => (
+                              <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                              >
+                                <Label
+                                  htmlFor={`${currentQ.id}-${index}`}
+                                  className={cn(
+                                    "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                                    mcqAnswers[currentQ.id] === index
+                                      ? "border-primary bg-primary/5"
+                                      : "border-muted hover:border-primary/30 hover:bg-muted/50"
+                                  )}
+                                >
+                                  <RadioGroupItem
+                                    value={index.toString()}
+                                    id={`${currentQ.id}-${index}`}
+                                    className="shrink-0"
+                                  />
+                                  <span className="text-sm font-medium">{option.label}</span>
+                                </Label>
+                              </motion.div>
+                            ))}
+                          </RadioGroup>
+                        </motion.div>
+                      </AnimatePresence>
+
+                      {/* Navigation */}
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                        <Button
+                          variant="ghost"
+                          onClick={currentQuestion === 0 ? () => setMode('select') : prevQuestion}
+                          className="gap-2"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          {currentQuestion === 0 ? 'Back' : 'Previous'}
+                        </Button>
+
+                        {currentQuestion < mcqQuestions.length - 1 ? (
+                          <Button
+                            onClick={nextQuestion}
+                            disabled={!canProceedMCQ}
+                            className="gap-2"
+                          >
+                            Next
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={handleAnalyze}
+                            disabled={!canProceedMCQ}
+                            className="gap-2 bg-primary"
+                          >
+                            Get Results
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* Quick Select Mode */}
+                {mode === 'quick' && (
+                  <motion.div
+                    key="quick"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-foreground">Select your symptoms</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setMode('select')}
+                          className="text-muted-foreground"
+                        >
+                          ← Back
+                        </Button>
+                      </div>
+
+                      {/* Selected count */}
+                      {selectedSymptoms.length > 0 && (
+                        <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                          <span className="text-sm font-medium text-primary">
+                            {selectedSymptoms.length} symptom{selectedSymptoms.length > 1 ? 's' : ''} selected
+                          </span>
+                          <button
+                            onClick={() => setSelectedSymptoms([])}
+                            className="text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            Clear all
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Symptom Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+                        {commonSymptoms.map((symptom) => (
                           <button
                             key={symptom.id}
                             onClick={() => toggleSymptom(symptom.id)}
                             className={cn(
-                              "px-3 py-1.5 rounded-full text-sm transition-all border",
+                              "p-3 rounded-lg border-2 text-sm font-medium transition-all text-left",
                               selectedSymptoms.includes(symptom.id)
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-secondary/50 text-secondary-foreground border-transparent hover:border-primary/30"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-muted hover:border-primary/30 hover:bg-muted/50"
                             )}
                           >
-                            {symptom.name}
+                            <div className="flex items-center gap-2">
+                              {selectedSymptoms.includes(symptom.id) && (
+                                <CheckCircle className="w-4 h-4 shrink-0" />
+                              )}
+                              <span className="truncate">{symptom.name}</span>
+                            </div>
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
 
-                  {/* Search & All Symptoms */}
-                  <div className="mb-5">
-                    <div className="relative mb-3">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search symptoms..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                          if (e.target.value) setShowAllSymptoms(true);
-                        }}
-                        onFocus={() => setShowAllSymptoms(true)}
-                        className="pl-9"
-                      />
-                    </div>
-
-                    {showAllSymptoms && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="max-h-60 overflow-y-auto rounded-lg border bg-card p-3"
+                      <Button
+                        onClick={handleAnalyze}
+                        disabled={selectedSymptoms.length === 0}
+                        className="w-full gap-2"
+                        size="lg"
                       >
-                        <div className="flex flex-wrap gap-1.5">
-                          {filteredSymptoms.map(symptom => (
-                            <button
-                              key={symptom.id}
-                              onClick={() => toggleSymptom(symptom.id)}
-                              className={cn(
-                                "px-2.5 py-1 rounded-full text-xs transition-all",
-                                selectedSymptoms.includes(symptom.id)
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-                              )}
-                            >
-                              {symptom.name}
-                            </button>
-                          ))}
-                        </div>
-                        {filteredSymptoms.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            No symptoms found
-                          </p>
-                        )}
-                      </motion.div>
-                    )}
-
-                    {!showAllSymptoms && (
-                      <button
-                        onClick={() => setShowAllSymptoms(true)}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        Show all symptoms →
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Analyze Button */}
-                  <Button
-                    variant="hero"
-                    onClick={handleAnalyze}
-                    disabled={selectedSymptoms.length === 0}
-                    className="w-full gap-2"
-                    size="lg"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Analyze Symptoms
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-
-                  <p className="text-xs text-muted-foreground text-center mt-3">
-                    Not a substitute for professional medical advice
-                  </p>
-                </Card>
-              </motion.div>
+                        Analyze Symptoms
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Card>
+                  </motion.div>
+                )}
+              </>
             ) : (
+              /* Results */
               <motion.div
                 key="results"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
               >
-                {/* Results Header */}
-                <div className="flex items-center justify-between">
-                  <h2 className="font-heading font-semibold text-lg">
-                    {results.length > 0 ? `${results.length} Possible Condition${results.length > 1 ? 's' : ''}` : 'No Matches'}
-                  </h2>
-                  <Button variant="ghost" size="sm" onClick={reset} className="gap-1">
-                    <RotateCcw className="w-4 h-4" />
-                    Start Over
-                  </Button>
-                </div>
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-foreground">Your Results</h2>
+                    <Button variant="outline" size="sm" onClick={reset} className="gap-2">
+                      <RotateCcw className="w-4 h-4" />
+                      Start Over
+                    </Button>
+                  </div>
 
-                {results.length === 0 ? (
-                  <Card className="p-6 text-center">
-                    <p className="text-muted-foreground">
-                      We couldn't match your symptoms. Please consult a healthcare provider.
-                    </p>
-                  </Card>
-                ) : (
-                  results.map((result, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Card className={cn("p-4 md:p-5 border-2", getUrgencyStyles(result.urgency))}>
-                        <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0",
-                            result.urgency === 'emergency' && "bg-destructive text-destructive-foreground",
-                            result.urgency === 'urgent' && "bg-orange-500 text-white",
-                            result.urgency === 'routine' && "bg-primary text-primary-foreground",
-                            result.urgency === 'self-care' && "bg-green-500 text-white"
-                          )}>
-                            {result.urgency === 'emergency' || result.urgency === 'urgent'
-                              ? <AlertCircle className="w-4 h-4" />
-                              : <CheckCircle className="w-4 h-4" />
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h3 className="font-heading font-semibold">
-                                {result.condition}
-                              </h3>
-                              {getUrgencyBadge(result.urgency)}
-                              <Badge variant="outline" className="text-xs">
-                                {result.probability} match
-                              </Badge>
+                  {results.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="w-8 h-8 text-green-500" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Looking Good!
+                      </h3>
+                      <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+                        Based on your symptoms, no immediate concerns were identified. 
+                        If symptoms persist, please consult a healthcare provider.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {results.map((result, index) => (
+                        <motion.div
+                          key={result.condition}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={cn(
+                            "p-4 rounded-xl border-2",
+                            getUrgencyStyles(result.urgency)
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                              <h3 className="font-semibold text-foreground">{result.condition}</h3>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {result.description}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {result.description}
-                            </p>
-                            
-                            <div className="space-y-2">
-                              <h4 className="text-xs font-medium text-muted-foreground">Recommendations:</h4>
-                              <ul className="space-y-1">
-                                {result.recommendations.slice(0, 3).map((rec, i) => (
-                                  <li key={i} className="text-sm flex items-start gap-2">
+                            {getUrgencyBadge(result.urgency)}
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                Matched Symptoms
+                              </span>
+                              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                {result.matchedSymptoms.map(symId => {
+                                  const sym = allSymptoms.find(s => s.id === symId);
+                                  return (
+                                    <Badge key={symId} variant="secondary" className="text-xs">
+                                      {sym?.name || symId}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                Recommendations
+                              </span>
+                              <ul className="mt-1.5 space-y-1">
+                                {result.recommendations.map((rec, i) => (
+                                  <li key={i} className="text-sm text-foreground flex items-start gap-2">
                                     <span className="text-primary mt-0.5">•</span>
                                     {rec}
                                   </li>
@@ -608,17 +821,25 @@ export const SymptomChecker = () => {
                               </ul>
                             </div>
                           </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))
-                )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
 
-                {/* Disclaimer */}
-                <Card className="p-4 bg-muted/30">
-                  <p className="text-xs text-muted-foreground text-center">
-                    <strong>Disclaimer:</strong> This is for informational purposes only. Always consult a qualified healthcare professional for diagnosis and treatment.
-                  </p>
+                  {/* Disclaimer */}
+                  <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
+                    <div className="flex gap-3">
+                      <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="text-xs text-muted-foreground">
+                        <p className="font-medium mb-1">Medical Disclaimer</p>
+                        <p>
+                          This tool provides general health information only and is not a substitute 
+                          for professional medical advice. Always consult a healthcare provider for 
+                          diagnosis and treatment.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </Card>
               </motion.div>
             )}
