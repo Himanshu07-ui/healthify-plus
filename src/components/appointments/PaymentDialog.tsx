@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, CheckCircle, Loader2, Smartphone } from 'lucide-react';
+import { CheckCircle, Loader2, ExternalLink, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import upiQrImage from '@/assets/upi-qr.jpeg';
 
 interface PaymentDialogProps {
   open: boolean;
@@ -14,7 +13,7 @@ interface PaymentDialogProps {
   onPaymentSuccess: () => void;
 }
 
-const UPI_ID = "debhimanshu9@oksbi";
+const RAZORPAY_PAYMENT_LINK = "https://razorpay.me/@ommprakashlenka";
 
 export const PaymentDialog = ({
   open,
@@ -24,25 +23,24 @@ export const PaymentDialog = ({
   onPaymentSuccess,
 }: PaymentDialogProps) => {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success'>('pending');
-  const [copied, setCopied] = useState(false);
-  const [transactionId, setTransactionId] = useState('');
+  const [paymentOpened, setPaymentOpened] = useState(false);
 
-  const copyUpiId = async () => {
-    await navigator.clipboard.writeText(UPI_ID);
-    setCopied(true);
-    toast.success('UPI ID copied!');
-    setTimeout(() => setCopied(false), 2000);
+  const handleOpenRazorpay = () => {
+    // Open Razorpay payment link in new tab
+    window.open(RAZORPAY_PAYMENT_LINK, '_blank');
+    setPaymentOpened(true);
+    toast.info('Complete payment in the new tab');
   };
 
   const handlePaymentConfirm = () => {
-    if (!transactionId.trim()) {
-      toast.error('Please enter the UPI Transaction ID');
+    if (!paymentOpened) {
+      toast.error('Please click "Pay with Razorpay" first to complete payment');
       return;
     }
     
     setPaymentStatus('processing');
     
-    // Simulate payment verification (in production, verify with backend)
+    // Simulate payment verification
     setTimeout(() => {
       setPaymentStatus('success');
       setTimeout(() => {
@@ -54,8 +52,7 @@ export const PaymentDialog = ({
   useEffect(() => {
     if (!open) {
       setPaymentStatus('pending');
-      setTransactionId('');
-      setCopied(false);
+      setPaymentOpened(false);
     }
   }, [open]);
 
@@ -64,11 +61,11 @@ export const PaymentDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading flex items-center gap-2">
-            <Smartphone className="w-5 h-5 text-primary" />
-            Pay via UPI
+            <CreditCard className="w-5 h-5 text-primary" />
+            Pay with Razorpay
           </DialogTitle>
           <DialogDescription>
-            Scan QR code or use UPI ID to complete payment
+            Complete your payment securely via Razorpay
           </DialogDescription>
         </DialogHeader>
 
@@ -87,55 +84,61 @@ export const PaymentDialog = ({
               </p>
             </div>
 
-            {/* QR Code */}
-            <div className="flex flex-col items-center">
-              <div className="bg-white p-3 rounded-xl shadow-md">
-                <img 
-                  src={upiQrImage} 
-                  alt="UPI QR Code" 
-                  className="w-48 h-48 object-contain"
-                />
+            {/* Razorpay Logo/Branding */}
+            <div className="flex flex-col items-center py-4">
+              <div className="bg-[#072654] text-white px-6 py-3 rounded-xl shadow-lg">
+                <span className="text-xl font-bold">Razorpay</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Scan to pay with any UPI app
+              <p className="text-sm text-muted-foreground mt-3 text-center">
+                Secure payment powered by Razorpay
               </p>
             </div>
 
-            {/* UPI ID */}
-            <div className="bg-muted/50 p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground text-center mb-2">Or pay using UPI ID</p>
-              <div className="flex items-center justify-between bg-background rounded-lg p-3">
-                <span className="font-mono font-medium">{UPI_ID}</span>
-                <Button variant="ghost" size="sm" onClick={copyUpiId}>
-                  {copied ? (
-                    <CheckCircle className="w-4 h-4 text-success" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
+            {/* Payment Instructions */}
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <p className="text-sm font-medium">How to pay:</p>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Click "Pay with Razorpay" button below</li>
+                <li>Enter the amount: ₹{amount}</li>
+                <li>Complete payment using UPI, Card, or Netbanking</li>
+                <li>Return here and click "I've Completed Payment"</li>
+              </ol>
             </div>
 
-            {/* Transaction ID Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Enter UPI Transaction ID (UTR)
-              </label>
-              <input
-                type="text"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="e.g., 123456789012"
-                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:outline-none"
-              />
-              <p className="text-xs text-muted-foreground">
-                You'll find this in your UPI app after payment
-              </p>
-            </div>
-
-            <Button variant="hero" className="w-full" onClick={handlePaymentConfirm}>
-              I've Completed Payment
+            {/* Pay Button */}
+            <Button 
+              variant="hero" 
+              className="w-full gap-2" 
+              onClick={handleOpenRazorpay}
+            >
+              <ExternalLink className="w-4 h-4" />
+              Pay with Razorpay
             </Button>
+
+            {paymentOpened && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3"
+              >
+                <div className="bg-success/10 border border-success/20 p-3 rounded-lg text-center">
+                  <p className="text-sm text-success font-medium">
+                    ✓ Razorpay payment page opened
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Complete payment and return here
+                  </p>
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={handlePaymentConfirm}
+                >
+                  I've Completed Payment
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         )}
 
