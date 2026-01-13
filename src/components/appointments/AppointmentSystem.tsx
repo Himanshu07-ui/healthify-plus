@@ -14,6 +14,7 @@ import { ConfirmationDialog } from './ConfirmationDialog';
 import { generateInvoice } from '@/lib/invoiceGenerator';
 import { Appointment } from '@/types/health';
 
+// Doctor data - fees are controlled by backend, these are for display only
 const doctors = [
   { id: '1', name: 'Dr. Sarah Mitchell', specialty: 'General Physician', fee: 500, available: ['09:00 AM', '10:30 AM', '02:00 PM', '04:30 PM'] },
   { id: '2', name: 'Dr. James Chen', specialty: 'Cardiologist', fee: 1200, available: ['10:00 AM', '11:30 AM', '03:00 PM'] },
@@ -22,7 +23,7 @@ const doctors = [
 ];
 
 export const AppointmentSystem = () => {
-  const { appointments, loading, cancelAppointment, bookAppointment } = useSupabaseAppointments();
+  const { appointments, loading, cancelAppointment, refetchAppointments } = useSupabaseAppointments();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
@@ -48,34 +49,43 @@ export const AppointmentSystem = () => {
     setPaymentOpen(true);
   };
 
-  // Handle payment success - book the appointment
-  const handlePaymentSuccess = async () => {
+  // Handle payment success - appointment is already booked by backend
+  const handlePaymentSuccess = async (appointmentId: string, transactionId: string) => {
     const doctor = doctors.find(d => d.id === selectedDoctor);
     if (!doctor) return;
 
-    // Generate a mock transaction ID
-    const txnId = `TXN${Date.now().toString(36).toUpperCase()}`;
-    setCurrentTransactionId(txnId);
+    setCurrentTransactionId(transactionId);
+    setPaymentOpen(false);
 
-    const result = await bookAppointment({
+    // Refetch appointments to get the confirmed one
+    await refetchAppointments();
+    
+    // Find the confirmed appointment
+    const confirmedAppointment: Appointment = {
+      id: appointmentId,
       doctorName: doctor.name,
       specialty: doctor.specialty,
       date: new Date(selectedDate),
       time: selectedTime,
+      status: 'scheduled',
       fee: doctor.fee,
-    });
+    };
 
+    setBookedAppointment(confirmedAppointment);
+    setConfirmationOpen(true);
+    
+    // Reset form
+    setSelectedDoctor('');
+    setSelectedDate('');
+    setSelectedTime('');
+    
+    toast.success('Appointment booked successfully!');
+  };
+
+  // Handle payment failure
+  const handlePaymentFailure = () => {
     setPaymentOpen(false);
-
-    if (result) {
-      setBookedAppointment(result);
-      setConfirmationOpen(true);
-      setSelectedDoctor('');
-      setSelectedDate('');
-      setSelectedTime('');
-    } else {
-      toast.error('Failed to book appointment. Payment received - please contact support.');
-    }
+    toast.error('Payment failed. Please try again.');
   };
 
   // Download invoice for an existing appointment
@@ -98,6 +108,7 @@ export const AppointmentSystem = () => {
     setCancelDialogOpen(true);
   };
 
+  // Only show scheduled (confirmed) appointments, not pending ones
   const activeAppointments = appointments.filter(a => a.status === 'scheduled');
   const selectedDoctorData = doctors.find(d => d.id === selectedDoctor);
 
@@ -283,20 +294,26 @@ export const AppointmentSystem = () => {
               Cancel
             </Button>
             <Button variant="hero" onClick={handleProceedToPayment} className="flex-1">
-              Proceed to Pay ₹{selectedDoctorData?.fee || 0}
+              Proceed to Pay
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Payment Dialog */}
-      <PaymentDialog
-        open={paymentOpen}
-        onOpenChange={setPaymentOpen}
-        amount={doctors.find(d => d.id === selectedDoctor)?.fee || 0}
-        doctorName={doctors.find(d => d.id === selectedDoctor)?.name || ''}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
+      {/* Payment Dialog - now uses backend for pricing */}
+      {selectedDoctorData && (
+        <PaymentDialog
+          open={paymentOpen}
+          onOpenChange={setPaymentOpen}
+          doctorId={selectedDoctor}
+          doctorName={selectedDoctorData.name}
+          specialty={selectedDoctorData.specialty}
+          date={selectedDate}
+          time={selectedTime}
+          onPaymentSuccess={handlePaymentSuccess}
+          onPaymentFailure={handlePaymentFailure}
+        />
+      )}
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog

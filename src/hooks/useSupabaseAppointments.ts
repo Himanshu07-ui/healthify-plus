@@ -47,46 +47,10 @@ export const useSupabaseAppointments = () => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const bookAppointment = useCallback(
-    async (appointment: Omit<Appointment, 'id' | 'status'>) => {
-      if (!user) return null;
-
-      try {
-        const { data, error } = await supabase
-          .from('appointments')
-          .insert({
-            user_id: user.id,
-            doctor_name: appointment.doctorName,
-            specialty: appointment.specialty,
-            date: appointment.date.toISOString().split('T')[0],
-            time: appointment.time,
-            fee: appointment.fee,
-            status: 'scheduled',
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        const newAppointment: Appointment = {
-          id: data.id,
-          doctorName: data.doctor_name,
-          specialty: data.specialty,
-          date: new Date(data.date),
-          time: data.time,
-          status: data.status as Appointment['status'],
-          fee: Number(data.fee),
-        };
-
-        setAppointments((prev) => [...prev, newAppointment]);
-        return newAppointment;
-      } catch (error) {
-        console.error('Error booking appointment:', error);
-        return null;
-      }
-    },
-    [user]
-  );
+  // Refetch appointments - useful after payment confirmation
+  const refetchAppointments = useCallback(async () => {
+    await fetchAppointments();
+  }, [fetchAppointments]);
 
   const cancelAppointment = useCallback(
     async (appointmentId: string) => {
@@ -125,7 +89,7 @@ export const useSupabaseAppointments = () => {
   return {
     appointments,
     loading,
-    bookAppointment,
     cancelAppointment,
+    refetchAppointments,
   };
 };
