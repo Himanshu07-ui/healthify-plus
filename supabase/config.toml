@@ -1,1 +1,19 @@
 project_id = "uknlmpwxaveabgawfbca"
+
+[functions.ai-doctor]
+verify_jwt = false
+
+[functions.doctor-stt]
+verify_jwt = false
+
+[functions.doctor-tts]
+verify_jwt = false
+
+[functions.scan-medicine]
+verify_jwt = false
+
+[functions.create-payment]
+verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false
