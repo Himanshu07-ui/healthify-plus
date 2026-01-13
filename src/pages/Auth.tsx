@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,13 @@ const phoneSchema = z.string().min(10, 'Please enter a valid phone number');
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, loading, signUp, signIn, signInWithGoogle, signInWithPhone, verifyPhoneOtp } = useAuth();
   
-  const [isLogin, setIsLogin] = useState(true);
+  // Check URL mode parameter to determine initial state
+  const mode = searchParams.get('mode');
+  const [isLogin, setIsLogin] = useState(mode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneStep, setPhoneStep] = useState<'phone' | 'otp'>('phone');
@@ -31,6 +34,11 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+
+  // Update isLogin when URL mode changes
+  useEffect(() => {
+    setIsLogin(mode !== 'signup');
+  }, [mode]);
 
   useEffect(() => {
     if (!loading && user) {

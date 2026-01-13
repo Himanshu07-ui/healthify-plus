@@ -105,12 +105,18 @@ export const Header = () => {
                 </Button>
               </div>
             ) : (
-              <Link to="/auth">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <User className="w-4 h-4" />
-                  Sign In
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/auth?mode=signin">
+                  <Button variant="outline" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth?mode=signup">
+                  <Button variant="default" size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
 
@@ -182,12 +188,18 @@ export const Header = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-center gap-2">
-                      <User className="w-4 h-4" />
-                      Sign In
-                    </Button>
-                  </Link>
+                  <div className="flex flex-col gap-2">
+                    <Link to="/auth?mode=signin" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full justify-center">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="default" className="w-full justify-center">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </div>
                 )}
               </div>
             </nav>
