@@ -2,22 +2,44 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+type AppRole = 'admin' | 'doctor' | 'user';
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle new signups - assign role from metadata
+        if (event === 'SIGNED_IN' && session?.user) {
+          const role = session.user.user_metadata?.role as AppRole | undefined;
+          if (role) {
+            // Check if role already exists
+            setTimeout(async () => {
+              const { data: existingRole } = await supabase
+                .from('user_roles')
+                .select('id')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+
+              if (!existingRole) {
+                await supabase.from('user_roles').insert({
+                  user_id: session.user.id,
+                  role: role,
+                });
+              }
+            }, 0);
+          }
+        }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -27,19 +49,29 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, role: AppRole = 'user') => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          role: role,
         }
       }
     });
+
+    // If signup successful and we have a user, insert the role
+    if (!error && data.user) {
+      await supabase.from('user_roles').insert({
+        user_id: data.user.id,
+        role: role,
+      });
+    }
+
     return { error };
   };
 

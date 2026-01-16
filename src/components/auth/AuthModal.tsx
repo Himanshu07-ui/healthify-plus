@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Heart, Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, Stethoscope, Shield, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,11 @@ import { z } from 'zod';
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 const phoneSchema = z.string().min(10, 'Please enter a valid phone number');
+
+const ADMIN_EMAILS = ['ommpatel19@gmail.com', 'omm@healthify.com'];
+const VALID_DOCTOR_UIDS = ['DOC001', 'DOC002', 'DOC003', 'DOC004', 'DOC005'];
+
+type UserRole = 'user' | 'doctor' | 'admin';
 
 interface AuthModalProps {
   open: boolean;
@@ -32,6 +37,42 @@ export const AuthModal = ({ open }: AuthModalProps) => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('user');
+  const [doctorUid, setDoctorUid] = useState('');
+
+  const validateRoleRequirements = (): boolean => {
+    if (selectedRole === 'admin') {
+      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
+        toast({
+          title: 'Access Denied',
+          description: 'This email is not authorized for admin signup.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+
+    if (selectedRole === 'doctor') {
+      if (!doctorUid.trim()) {
+        toast({
+          title: 'Doctor UID Required',
+          description: 'Please enter your doctor UID to continue.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (!VALID_DOCTOR_UIDS.includes(doctorUid.toUpperCase())) {
+        toast({
+          title: 'Invalid Doctor UID',
+          description: 'The doctor UID you entered is not valid.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +93,11 @@ export const AuthModal = ({ open }: AuthModalProps) => {
       }
     }
 
+    if (!isLogin && !validateRoleRequirements()) {
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
@@ -70,7 +116,7 @@ export const AuthModal = ({ open }: AuthModalProps) => {
           });
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName, selectedRole);
         if (error) {
           toast({
             title: error.message.includes('User already registered') ? 'Account Exists' : 'Signup Failed',
@@ -82,7 +128,7 @@ export const AuthModal = ({ open }: AuthModalProps) => {
         } else {
           toast({
             title: 'Account Created!',
-            description: 'Welcome to Healthify!',
+            description: `Welcome to Healthify as a ${selectedRole}!`,
           });
         }
       }
@@ -161,6 +207,12 @@ export const AuthModal = ({ open }: AuthModalProps) => {
     setIsSubmitting(false);
   };
 
+  const roleOptions = [
+    { value: 'user' as UserRole, label: 'Patient', icon: UserCheck },
+    { value: 'doctor' as UserRole, label: 'Doctor', icon: Stethoscope },
+    { value: 'admin' as UserRole, label: 'Admin', icon: Shield },
+  ];
+
   return (
     <Dialog open={open}>
       <DialogContent 
@@ -212,20 +264,68 @@ export const AuthModal = ({ open }: AuthModalProps) => {
             <TabsContent value="email">
               <form onSubmit={handleEmailAuth} className="space-y-3">
                 {!isLogin && (
-                  <div className="space-y-1">
-                    <Label htmlFor="modal-fullName" className="text-sm">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="modal-fullName"
-                        type="text"
-                        placeholder="John Doe"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10"
-                      />
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-sm">Select Role</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {roleOptions.map((role) => (
+                          <button
+                            key={role.value}
+                            type="button"
+                            onClick={() => setSelectedRole(role.value)}
+                            className={`p-2 rounded-lg border-2 transition-all text-center ${
+                              selectedRole === role.value
+                                ? 'border-medical-primary bg-medical-primary/10'
+                                : 'border-border hover:border-medical-primary/50'
+                            }`}
+                          >
+                            <role.icon className={`w-4 h-4 mx-auto mb-1 ${
+                              selectedRole === role.value ? 'text-medical-primary' : 'text-muted-foreground'
+                            }`} />
+                            <p className={`text-xs font-medium ${
+                              selectedRole === role.value ? 'text-medical-primary' : 'text-foreground'
+                            }`}>
+                              {role.label}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+
+                    {selectedRole === 'doctor' && (
+                      <div className="space-y-1">
+                        <Label htmlFor="modal-doctorUid" className="text-sm">Doctor UID</Label>
+                        <div className="relative">
+                          <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="modal-doctorUid"
+                            type="text"
+                            placeholder="e.g., DOC001"
+                            value={doctorUid}
+                            onChange={(e) => setDoctorUid(e.target.value.toUpperCase())}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <Label htmlFor="modal-fullName" className="text-sm">Full Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="modal-fullName"
+                          type="text"
+                          placeholder="John Doe"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
                 
                 <div className="space-y-1">

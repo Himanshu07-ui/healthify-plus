@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Mail, Lock, User, ArrowRight, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Heart, Mail, Lock, User, ArrowRight, Eye, EyeOff, ArrowLeft, Stethoscope, Shield, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,24 +13,31 @@ import { z } from 'zod';
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
+// Admin emails - only these can sign up as admin
+const ADMIN_EMAILS = ['ommpatel19@gmail.com', 'omm@healthify.com'];
+
+// Valid doctor UIDs
+const VALID_DOCTOR_UIDS = ['DOC001', 'DOC002', 'DOC003', 'DOC004', 'DOC005'];
+
+type UserRole = 'user' | 'doctor' | 'admin';
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, loading, signUp, signIn } = useAuth();
   
-  // Check URL mode parameter to determine initial state
   const mode = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(mode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('user');
+  const [doctorUid, setDoctorUid] = useState('');
 
-  // Update isLogin when URL mode changes
   useEffect(() => {
     setIsLogin(mode !== 'signup');
   }, [mode]);
@@ -40,6 +47,40 @@ const Auth = () => {
       navigate('/dashboard');
     }
   }, [user, loading, navigate]);
+
+  const validateRoleRequirements = (): boolean => {
+    if (selectedRole === 'admin') {
+      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
+        toast({
+          title: 'Access Denied',
+          description: 'This email is not authorized for admin signup.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+
+    if (selectedRole === 'doctor') {
+      if (!doctorUid.trim()) {
+        toast({
+          title: 'Doctor UID Required',
+          description: 'Please enter your doctor UID to continue.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (!VALID_DOCTOR_UIDS.includes(doctorUid.toUpperCase())) {
+        toast({
+          title: 'Invalid Doctor UID',
+          description: 'The doctor UID you entered is not valid.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,23 +101,22 @@ const Auth = () => {
       }
     }
 
+    if (!isLogin && !validateRoleRequirements()) {
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: 'Login Failed',
-              description: 'Invalid email or password. Please try again.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Login Failed',
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
+          toast({
+            title: 'Login Failed',
+            description: error.message.includes('Invalid login credentials')
+              ? 'Invalid email or password. Please try again.'
+              : error.message,
+            variant: 'destructive',
+          });
         } else {
           toast({
             title: 'Welcome back!',
@@ -85,30 +125,24 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName, selectedRole);
         if (error) {
-          if (error.message.includes('User already registered')) {
-            toast({
-              title: 'Account Exists',
-              description: 'An account with this email already exists. Please login instead.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Signup Failed',
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
+          toast({
+            title: error.message.includes('User already registered') ? 'Account Exists' : 'Signup Failed',
+            description: error.message.includes('User already registered')
+              ? 'An account with this email already exists. Please login instead.'
+              : error.message,
+            variant: 'destructive',
+          });
         } else {
           toast({
             title: 'Account Created!',
-            description: 'Welcome to Healthify! You can now access your dashboard.',
+            description: `Welcome to Healthify as a ${selectedRole}!`,
           });
           navigate('/dashboard');
         }
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred. Please try again.',
@@ -118,9 +152,6 @@ const Auth = () => {
       setIsSubmitting(false);
     }
   };
-
-
-
 
   if (loading) {
     return (
@@ -132,9 +163,14 @@ const Auth = () => {
     );
   }
 
+  const roleOptions = [
+    { value: 'user' as UserRole, label: 'Patient', icon: UserCheck, description: 'Access health tracking features' },
+    { value: 'doctor' as UserRole, label: 'Doctor', icon: Stethoscope, description: 'Manage appointments & patients' },
+    { value: 'admin' as UserRole, label: 'Admin', icon: Shield, description: 'Full system access' },
+  ];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-medical-light via-background to-mint/20 p-4">
-      {/* Back Button */}
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -175,20 +211,74 @@ const Auth = () => {
           <CardContent className="pt-4">
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="fullName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
-                    />
+                <>
+                  <div className="space-y-2">
+                    <Label>Select Role</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {roleOptions.map((role) => (
+                        <button
+                          key={role.value}
+                          type="button"
+                          onClick={() => setSelectedRole(role.value)}
+                          className={`p-3 rounded-lg border-2 transition-all text-center ${
+                            selectedRole === role.value
+                              ? 'border-medical-primary bg-medical-primary/10'
+                              : 'border-border hover:border-medical-primary/50'
+                          }`}
+                        >
+                          <role.icon className={`w-5 h-5 mx-auto mb-1 ${
+                            selectedRole === role.value ? 'text-medical-primary' : 'text-muted-foreground'
+                          }`} />
+                          <p className={`text-xs font-medium ${
+                            selectedRole === role.value ? 'text-medical-primary' : 'text-foreground'
+                          }`}>
+                            {role.label}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      {roleOptions.find(r => r.value === selectedRole)?.description}
+                    </p>
                   </div>
-                </div>
+
+                  {selectedRole === 'doctor' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="doctorUid">Doctor UID</Label>
+                      <div className="relative">
+                        <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="doctorUid"
+                          type="text"
+                          placeholder="e.g., DOC001"
+                          value={doctorUid}
+                          onChange={(e) => setDoctorUid(e.target.value.toUpperCase())}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Enter your registered doctor UID
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="fullName"
+                        type="text"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
               )}
               
               <div className="space-y-2">
