@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, User, XCircle, DollarSign, Download } from 'lucide-react';
+import { Calendar, Clock, User, XCircle, DollarSign, Download, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAppointments } from '@/hooks/useSupabaseAppointments';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { PaymentDialog } from './PaymentDialog';
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { AdminAppointmentPanel } from './AdminAppointmentPanel';
 import { generateInvoice } from '@/lib/invoiceGenerator';
 import { Appointment } from '@/types/health';
 
@@ -24,6 +27,7 @@ const doctors = [
 
 export const AppointmentSystem = () => {
   const { appointments, loading, cancelAppointment, refetchAppointments } = useSupabaseAppointments();
+  const { isDoctor, loading: roleLoading } = useUserRole();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
@@ -112,6 +116,94 @@ export const AppointmentSystem = () => {
   const activeAppointments = appointments.filter(a => a.status === 'scheduled');
   const selectedDoctorData = doctors.find(d => d.id === selectedDoctor);
 
+  // Patient view component
+  const renderPatientView = () => (
+    <>
+      {/* Book New Appointment */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mb-8"
+      >
+        <Button variant="hero" size="lg" onClick={() => setBookingOpen(true)} className="w-full sm:w-auto">
+          Book New Appointment
+        </Button>
+      </motion.div>
+
+      {/* Active Appointments */}
+      {activeAppointments.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-heading font-semibold">Your Appointments</h3>
+          {activeAppointments.map((appointment, index) => (
+            <motion.div
+              key={appointment.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className="p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <User className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-heading font-semibold">{appointment.doctorName}</h4>
+                      <p className="text-sm text-muted-foreground">{appointment.specialty}</p>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(appointment.date).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {appointment.time}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-semibold text-primary">
+                      ₹{appointment.fee}
+                    </span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => openCancelDialog(appointment.id)}
+                      className="gap-1"
+                    >
+                      <XCircle className="w-4 h-4" /> Cancel
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadInvoice(appointment)}
+                      className="gap-1"
+                    >
+                      <Download className="w-4 h-4" /> Invoice
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {activeAppointments.length === 0 && (
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">No upcoming appointments. Book one to get started!</p>
+        </Card>
+      )}
+    </>
+  );
+
   return (
     <section id="appointments" className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -128,92 +220,37 @@ export const AppointmentSystem = () => {
             Appointments
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Book appointments with our trusted healthcare professionals. Cancel anytime for a 100% full refund.
+            {isDoctor 
+              ? 'Manage all patient appointments from your doctor dashboard.'
+              : 'Book appointments with our trusted healthcare professionals. Cancel anytime for a 100% full refund.'}
           </p>
         </motion.div>
 
         <div className="max-w-4xl mx-auto">
-          {/* Book New Appointment */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-8"
-          >
-            <Button variant="hero" size="lg" onClick={() => setBookingOpen(true)} className="w-full sm:w-auto">
-              Book New Appointment
-            </Button>
-          </motion.div>
-
-          {/* Active Appointments */}
-          {activeAppointments.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-heading font-semibold">Your Appointments</h3>
-              {activeAppointments.map((appointment, index) => (
-                <motion.div
-                  key={appointment.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <User className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-heading font-semibold">{appointment.doctorName}</h4>
-                          <p className="text-sm text-muted-foreground">{appointment.specialty}</p>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(appointment.date).toLocaleDateString('en-US', {
-                                weekday: 'short',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {appointment.time}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-semibold text-primary">
-                          ₹{appointment.fee}
-                        </span>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => openCancelDialog(appointment.id)}
-                          className="gap-1"
-                        >
-                          <XCircle className="w-4 h-4" /> Cancel
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadInvoice(appointment)}
-                          className="gap-1"
-                        >
-                          <Download className="w-4 h-4" /> Invoice
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {activeAppointments.length === 0 && (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No upcoming appointments. Book one to get started!</p>
-            </Card>
+          {/* Show tabs if user is a doctor */}
+          {isDoctor ? (
+            <Tabs defaultValue="admin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="admin" className="gap-2">
+                  <Shield className="w-4 h-4" />
+                  Doctor Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="patient" className="gap-2">
+                  <User className="w-4 h-4" />
+                  My Appointments
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="admin">
+                <AdminAppointmentPanel />
+              </TabsContent>
+              
+              <TabsContent value="patient">
+                {renderPatientView()}
+              </TabsContent>
+            </Tabs>
+          ) : (
+            renderPatientView()
           )}
         </div>
       </div>
