@@ -1,5 +1,5 @@
-import { PageLayout } from '@/components/layout/Layout';
-import { SymptomChecker } from '@/components/symptoms/SymptomChecker';
+import { PageLayout } from '@/components/Layout';
+import { SymptomChecker } from '@/components/SymptomChecker';
 
 const Symptoms = () => {
   return (

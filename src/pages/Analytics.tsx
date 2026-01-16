@@ -1,7 +1,6 @@
-import { PageLayout } from '@/components/layout/Layout';
-import { VitalsChart } from '@/components/dashboard/HealthDashboard';
-import { AddVitalForm } from '@/components/analytics/AddVitalForm';
-import { EmptyAnalyticsState } from '@/components/analytics/EmptyAnalyticsState';
+import { PageLayout } from '@/components/Layout';
+import { VitalsChart } from '@/components/HealthDashboard';
+import { AddVitalForm, EmptyAnalyticsState } from '@/components/AnalyticsComponents';
 import { useSupabaseVitals } from '@/hooks/useSupabaseVitals';
 
 const Analytics = () => {

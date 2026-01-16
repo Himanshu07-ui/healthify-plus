@@ -1,5 +1,5 @@
-import { Header, Footer, HeroSection } from '@/components/layout/Layout';
-import { FeaturesSection, HowItWorksSection, StatsSection, TestimonialsSection, CTASection } from '@/components/home/HomeSections';
+import { Header, Footer, HeroSection } from '@/components/Layout';
+import { FeaturesSection, HowItWorksSection, StatsSection, TestimonialsSection, CTASection } from '@/components/HomeSections';
 import { useAuth } from '@/hooks/useAuth';
 import { Heart } from 'lucide-react';
 
