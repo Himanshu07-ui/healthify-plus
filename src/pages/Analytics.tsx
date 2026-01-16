@@ -1,12 +1,12 @@
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { VitalsChart } from '@/components/dashboard/VitalsChart';
+import { Header, Footer } from '@/components/layout/Layout';
+import { VitalsChart } from '@/components/dashboard/HealthDashboard';
 import { AddVitalForm } from '@/components/analytics/AddVitalForm';
 import { EmptyAnalyticsState } from '@/components/analytics/EmptyAnalyticsState';
-import { useUserVitals } from '@/hooks/useUserVitals';
+import { useSupabaseVitals } from '@/hooks/useSupabaseVitals';
 
 const Analytics = () => {
-  const { vitals, addVitalReading, hasData } = useUserVitals();
+  const { vitals, addVitalReading, loading } = useSupabaseVitals();
+  const hasData = vitals.length > 0;
 
   return (
     <div className="min-h-screen bg-background">

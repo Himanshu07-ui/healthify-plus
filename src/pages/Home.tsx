@@ -1,17 +1,10 @@
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { HeroSection } from '@/components/hero/HeroSection';
-import { FeaturesSection } from '@/components/home/FeaturesSection';
-import { HowItWorksSection } from '@/components/home/HowItWorksSection';
-import { StatsSection } from '@/components/home/StatsSection';
-import { TestimonialsSection } from '@/components/home/TestimonialsSection';
-import { CTASection } from '@/components/home/CTASection';
-import { AuthModal } from '@/components/auth/AuthModal';
+import { Header, Footer, HeroSection } from '@/components/layout/Layout';
+import { FeaturesSection, HowItWorksSection, StatsSection, TestimonialsSection, CTASection } from '@/components/home/HomeSections';
 import { useAuth } from '@/hooks/useAuth';
 import { Heart } from 'lucide-react';
 
 const Home = () => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (

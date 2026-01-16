@@ -1,5 +1,4 @@
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { Header, Footer } from '@/components/layout/Layout';
 import { SymptomChecker } from '@/components/symptoms/SymptomChecker';
 
 const Symptoms = () => {
