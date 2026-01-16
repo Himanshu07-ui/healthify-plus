@@ -1,5 +1,5 @@
-import { PageLayout } from '@/components/layout/Layout';
-import { HealthDashboard } from '@/components/dashboard/HealthDashboard';
+import { PageLayout } from '@/components/Layout';
+import { HealthDashboard } from '@/components/HealthDashboard';
 
 const Dashboard = () => {
   return (

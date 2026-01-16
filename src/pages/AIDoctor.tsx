@@ -1,5 +1,5 @@
-import { PageLayout } from '@/components/layout/Layout';
-import { AIDoctorChat } from '@/components/ai-doctor/AIDoctorChat';
+import { PageLayout } from '@/components/Layout';
+import { AIDoctorChat } from '@/components/AIDoctorChat';
 
 const AIDoctor = () => {
   return (
