@@ -1,4 +1,4 @@
-import { Header, Footer } from '@/components/layout/Layout';
+import { PageLayout } from '@/components/layout/Layout';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Upload, Pill, AlertTriangle, CheckCircle, Loader2, X, Search, Info, Scan, History, GitCompare, Trash2 } from 'lucide-react';
@@ -383,9 +383,7 @@ const MedicineScanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main>
+    <PageLayout>
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -736,9 +734,7 @@ const MedicineScanner = () => {
             </div>
           </div>
         </section>
-      </main>
-      <Footer />
-    </div>
+    </PageLayout>
   );
 };
 

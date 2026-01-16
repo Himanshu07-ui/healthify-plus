@@ -242,6 +242,22 @@ export const Footer = () => {
   );
 };
 
+// ===================== PAGE LAYOUT =====================
+interface PageLayoutProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const PageLayout = ({ children, className }: PageLayoutProps) => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className={className}>{children}</main>
+      <Footer />
+    </div>
+  );
+};
+
 // ===================== HERO SECTION =====================
 export const HeroSection = () => {
   const navigate = useNavigate();
