@@ -19,7 +19,7 @@ const getVitalStatus = (reading: VitalReading): string => {
   
   if (reading.type === 'bloodSugar') {
     const bs = VITAL_THRESHOLDS.bloodSugar;
-    if (reading.value >= bs.critical_high || reading.value <= bs.critical_low) {
+    if (reading.value >= bs.critical_high || reading.value <= bs.critical_low)  {
       return 'CRITICAL';
     }
     if (reading.value >= bs.high || reading.value < bs.normal_low) {
