@@ -9,7 +9,7 @@ export const useSupabaseAppointments = () => {
   const [loading, setLoading] = useState(true);
 
   // Fetch appointments from Supabase
-  const fetchAppointments = useCallback(async () => {
+  const fetchAppointments = useCallback(async () =>  {
     if (!user) {
       setAppointments([]);
       setLoading(false);
