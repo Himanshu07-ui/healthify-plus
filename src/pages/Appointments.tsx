@@ -4,7 +4,7 @@ import { AppointmentSystem } from '@/components/appointments/AppointmentSystem';
 const Appointments = () => {
   return (
     <PageLayout>
-      <AppointmentSystem />
+      <AppointmentSystem  />
     </PageLayout>
   );
 };
