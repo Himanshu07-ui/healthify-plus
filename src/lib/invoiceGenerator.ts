@@ -7,7 +7,7 @@ export const generateInvoice = (
   patientName: string = 'Patient'
 ) => {
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageWidth = doc.internal.pageSize.getWidth() ;
   
   // Colors
   const primaryColor: [number, number, number] = [34, 139, 34]; // Green
