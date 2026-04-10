@@ -6,7 +6,7 @@ type AppRole = 'admin' | 'doctor' | 'user';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(null) ;
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
