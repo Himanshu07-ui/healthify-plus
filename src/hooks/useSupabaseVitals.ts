@@ -9,7 +9,7 @@ export const useSupabaseVitals = () => {
   const [loading, setLoading] = useState(true);
 
   // Fetch vitals from Supabase
-  const fetchVitals = useCallback(async () => {
+  const fetchVitals = useCallback(async () =>  {
     if (!user) {
       setVitals([]);
       setLoading(false);
