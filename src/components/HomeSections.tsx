@@ -13,70 +13,82 @@ const features = [
     title: 'Vital Monitoring',
     description: 'Track blood pressure, heart rate, temperature, and more with easy-to-read charts and trends.',
     color: 'from-primary to-primary/70',
+    href: '/dashboard',
   },
   {
     icon: Stethoscope,
     title: 'Symptom Checker',
     description: 'AI-powered symptom analysis to help you understand your health concerns before visiting a doctor.',
     color: 'from-success to-success/70',
+    href: '/symptoms',
   },
   {
     icon: Calendar,
     title: 'Appointments',
     description: 'Book and manage doctor appointments seamlessly. Get reminders so you never miss a visit.',
     color: 'from-warning to-warning/70',
+    href: '/appointments',
   },
   {
     icon: Pill,
     title: 'Medicine Scanner',
     description: 'Scan medicine packages to get detailed information about dosage, side effects, and interactions.',
     color: 'from-destructive to-destructive/70',
+    href: '/medicine-scanner',
   },
   {
     icon: BarChart3,
     title: 'Health Analytics',
     description: 'Comprehensive health reports and analytics to track your progress over time.',
     color: 'from-accent to-accent/70',
+    href: '/dashboard',
   },
   {
     icon: FileText,
     title: 'PDF Reports',
     description: 'Generate detailed PDF reports of your health data to share with healthcare providers.',
     color: 'from-primary to-success',
+    href: '/dashboard',
   },
   {
     icon: Video,
     title: 'Telemedicine',
     description: 'Remote consultation platforms optimized for low-bandwidth regions, connecting you with doctors anywhere.',
     color: 'from-primary to-accent',
+    href: '/telemedicine',
   },
   {
     icon: Brain,
     title: 'Mental Wellness',
     description: 'AI-based mood tracking, counseling support tools, and mental health resources for your well-being.',
     color: 'from-accent to-warning',
+    href: '/mental-wellness',
   },
   {
     icon: ShieldCheck,
     title: 'Preventive Healthcare',
     description: 'Early detection using wearable and camera-based data to catch health issues before they escalate.',
     color: 'from-success to-primary',
+    href: '/preventive-care',
   },
   {
     icon: Siren,
     title: 'Emergency Response',
     description: 'Blood donor networks and ambulance tracking systems for rapid emergency medical assistance.',
     color: 'from-destructive to-warning',
+    href: '/emergency',
   },
   {
     icon: UserRound,
     title: 'Elderly Care',
     description: 'Dedicated health monitoring and medication reminder solutions tailored for senior citizens.',
     color: 'from-warning to-success',
+    href: '/elderly-care',
   },
 ];
 
 export const FeaturesSection = () => {
+  const navigate = useNavigate();
   return (
     <section className="py-24 bg-muted/30 relative overflow-hidden">
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -111,7 +123,8 @@ export const FeaturesSection = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5 }}
-              className="group bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-300 shadow-lg hover:shadow-xl"
+              onClick={() => navigate(feature.href)}
+              className="group bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             >
               <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                 <feature.icon className="w-7 h-7 text-white" />
