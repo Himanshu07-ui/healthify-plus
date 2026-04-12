@@ -15,6 +15,11 @@ const navItems = [
   { label: 'AI Doctor', href: '/ai-doctor' },
   { label: 'Appointments', href: '/appointments' },
   { label: 'Medicine Scanner', href: '/medicine-scanner' },
+  { label: 'Telemedicine', href: '/telemedicine' },
+  { label: 'Mental Wellness', href: '/mental-wellness' },
+  { label: 'Preventive Care', href: '/preventive-care' },
+  { label: 'Emergency', href: '/emergency' },
+  { label: 'Elderly Care', href: '/elderly-care' },
 ];
 
 // ===================== HEADER =====================

@@ -10,6 +10,11 @@ import Appointments from "./pages/Appointments";
 import MedicineScanner from "./pages/MedicineScanner";
 import Auth from "./pages/Auth";
 import AIDoctor from "./pages/AIDoctor";
+import Telemedicine from "./pages/Telemedicine";
+import MentalWellness from "./pages/MentalWellness";
+import PreventiveCare from "./pages/PreventiveCare";
+import EmergencyResponse from "./pages/EmergencyResponse";
+import ElderlyCare from "./pages/ElderlyCare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +32,11 @@ const App = () => (
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/medicine-scanner" element={<MedicineScanner />} />
           <Route path="/ai-doctor" element={<AIDoctor />} />
+          <Route path="/telemedicine" element={<Telemedicine />} />
+          <Route path="/mental-wellness" element={<MentalWellness />} />
+          <Route path="/preventive-care" element={<PreventiveCare />} />
+          <Route path="/emergency" element={<EmergencyResponse />} />
+          <Route path="/elderly-care" element={<ElderlyCare />} />
           <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
