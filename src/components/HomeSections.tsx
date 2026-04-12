@@ -123,7 +123,8 @@ export const FeaturesSection = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5 }}
-              className="group bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-300 shadow-lg hover:shadow-xl"
+              onClick={() => navigate(feature.href)}
+              className="group bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             >
               <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                 <feature.icon className="w-7 h-7 text-white" />
