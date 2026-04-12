@@ -5,6 +5,7 @@ import {
   Stethoscope, Calendar, Pill, BarChart3, FileText, Video, Brain, ShieldCheck,
   Siren, UserRound
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const features = [
   {
