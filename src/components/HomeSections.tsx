@@ -2,11 +2,10 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowRight, Sparkles, Star, Quote, UserPlus, Activity, TrendingUp, HeartPulse,
-  Stethoscope, Calendar, Pill, BarChart3, FileText
+  Stethoscope, Calendar, Pill, BarChart3, FileText, Video, Brain, ShieldCheck,
+  Siren, UserRound
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
-// ===================== FEATURES SECTION =====================
 const features = [
   {
     icon: Activity,
@@ -43,6 +42,36 @@ const features = [
     title: 'PDF Reports',
     description: 'Generate detailed PDF reports of your health data to share with healthcare providers.',
     color: 'from-primary to-success',
+  },
+  {
+    icon: Video,
+    title: 'Telemedicine',
+    description: 'Remote consultation platforms optimized for low-bandwidth regions, connecting you with doctors anywhere.',
+    color: 'from-primary to-accent',
+  },
+  {
+    icon: Brain,
+    title: 'Mental Wellness',
+    description: 'AI-based mood tracking, counseling support tools, and mental health resources for your well-being.',
+    color: 'from-accent to-warning',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Preventive Healthcare',
+    description: 'Early detection using wearable and camera-based data to catch health issues before they escalate.',
+    color: 'from-success to-primary',
+  },
+  {
+    icon: Siren,
+    title: 'Emergency Response',
+    description: 'Blood donor networks and ambulance tracking systems for rapid emergency medical assistance.',
+    color: 'from-destructive to-warning',
+  },
+  {
+    icon: UserRound,
+    title: 'Elderly Care',
+    description: 'Dedicated health monitoring and medication reminder solutions tailored for senior citizens.',
+    color: 'from-warning to-success',
   },
 ];
 
