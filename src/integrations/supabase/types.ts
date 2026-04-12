@@ -56,6 +56,150 @@ export type Database = {
         }
         Relationships: []
       }
+      blood_donors: {
+        Row: {
+          blood_group: string
+          created_at: string
+          id: string
+          is_available: boolean
+          last_donation_date: string | null
+          location: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_group: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          last_donation_date?: string | null
+          location: string
+          phone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_group?: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          last_donation_date?: string | null
+          location?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          contact_name: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          phone: string
+          relationship: string
+          user_id: string
+        }
+        Insert: {
+          contact_name: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          phone: string
+          relationship: string
+          user_id: string
+        }
+        Update: {
+          contact_name?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          phone?: string
+          relationship?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_assessments: {
+        Row: {
+          answers: Json | null
+          assessment_type: string
+          created_at: string
+          id: string
+          recommendations: string[] | null
+          risk_level: string
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          assessment_type: string
+          created_at?: string
+          id?: string
+          recommendations?: string[] | null
+          risk_level?: string
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          assessment_type?: string
+          created_at?: string
+          id?: string
+          recommendations?: string[] | null
+          risk_level?: string
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      medication_reminders: {
+        Row: {
+          created_at: string
+          dosage: string
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          medicine_name: string
+          notes: string | null
+          start_date: string
+          times: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dosage: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          medicine_name: string
+          notes?: string | null
+          start_date?: string
+          times?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dosage?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          medicine_name?: string
+          notes?: string | null
+          start_date?: string
+          times?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       medicine_history: {
         Row: {
           category: string | null
@@ -86,6 +230,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mood_entries: {
+        Row: {
+          activities: string[] | null
+          created_at: string
+          id: string
+          mood_label: string
+          mood_score: number
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          activities?: string[] | null
+          created_at?: string
+          id?: string
+          mood_label?: string
+          mood_score: number
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          activities?: string[] | null
+          created_at?: string
+          id?: string
+          mood_label?: string
+          mood_score?: number
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -111,6 +285,51 @@ export type Database = {
           display_name?: string | null
           id?: string
           phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      telemedicine_sessions: {
+        Row: {
+          created_at: string
+          doctor_name: string
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          prescription: string | null
+          scheduled_at: string
+          session_type: string
+          specialty: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_name: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          prescription?: string | null
+          scheduled_at: string
+          session_type?: string
+          specialty?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doctor_name?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          prescription?: string | null
+          scheduled_at?: string
+          session_type?: string
+          specialty?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }
