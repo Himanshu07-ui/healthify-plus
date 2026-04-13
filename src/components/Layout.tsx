@@ -12,7 +12,6 @@ const navItems = [
   { label: 'Home', href: '/' },
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Symptoms', href: '/symptoms' },
-  { label: 'AI Doctor', href: '/ai-doctor' },
   { label: 'Appointments', href: '/appointments' },
   { label: 'Medicine Scanner', href: '/medicine-scanner' },
   { label: 'Telemedicine', href: '/telemedicine' },
@@ -78,12 +77,6 @@ export const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="destructive" size="sm" asChild>
-              <a href="tel:112">
-                <Phone className="w-4 h-4" />
-                Emergency 112
-              </a>
-            </Button>
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -158,12 +151,6 @@ export const Header = () => {
                   {item.label}
                 </Link>
               ))}
-              <a href="tel:112" className="mt-2">
-                <Button variant="destructive" className="w-full justify-center">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Emergency 112
-                </Button>
-              </a>
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
                 {user ? (
                   <div className="flex items-center justify-between px-2">
