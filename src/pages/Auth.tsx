@@ -322,7 +322,7 @@ const Auth = () => {
               
               <Button
                 type="submit"
-                className="w-full bg-gradient-medical hover:opacity-90"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
