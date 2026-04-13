@@ -412,7 +412,7 @@ export const CTASection = () => {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="border-2 border-white/30 text-white hover:bg-white/10 hover:text-white"
+                  className="border-2 border-white text-white bg-white/10 hover:bg-white/20 hover:text-white"
                 >
                   Contact Sales
                 </Button>
